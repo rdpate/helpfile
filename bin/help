@@ -1,0 +1,122 @@
+#!/bin/sh -ue
+#.help
+# help COMMAND
+#
+# Show help for COMMAND.
+
+fatal() {
+    printf %s\\n "$(basename "$0") error: $2" >&2
+    exit "$1"
+}
+
+handle_option() {
+    case "$1" in
+        *)
+            fatal 64 "unknown option: $1"
+            ;;
+    esac
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --)
+            shift
+            break;;
+        --*=*)
+            x="${1#--}"
+            handle_option "${x%%=*}" "${x#*=}"
+            shift;;
+        --*)
+            handle_option "${1#--}"
+            shift;;
+        -?*)
+            if [ ${#1} = 2 ]; then
+                handle_option "${1#-}"
+            else
+                v="${1#??}"
+                x="${1%"$v"}"
+                handle_option "${x#-}" "$v"
+            fi
+            shift;;
+        *)
+            break;;
+    esac
+done
+
+
+if [ $# -eq 0 ]; then
+    fatal 64 'expected arguments: COMMAND'
+elif [ $# -gt 1 ]; then
+    fatal 64 'subsections not yet supported'
+fi
+main() {
+    command="$(which "$1")" || fatal 69 "unknown command: $1"
+    rc=0
+    output_help "$1" <"$command" || rc=$?
+    if [ "$rc" = 2 ]; then
+        case "$1" in
+            */*)
+                fatal 69 "help text not found: $1"
+                ;;
+        esac
+        exec man 1 "$1"
+    fi
+}
+output_help() {
+    read -r line || fatal 69 "help text not found: $1"
+    line="$(printf "$line" | sed -r 's/ *$//; s/^#! +/#!/')"
+    case "$line" in
+        '#!/bin/sh' | '#!/bin/sh '*) ;;
+        *)
+            return 2
+            ;;
+    esac
+    while :; do
+        read -r line || fatal 69 "help text not found: $1"
+        line="$(printf "$line" | sed -r 's/ *$//')"
+        case "$line" in
+            '#.help')
+                if [ -t 1 ]; then
+                    extract_help_text | format_help_text | "${PAGER:-less}"
+                else
+                    extract_help_text | format_help_text
+                fi
+                return
+                ;;
+            '#'*)
+                ;;
+            *)
+                return 2
+                ;;
+        esac
+    done
+}
+extract_help_text() {
+    while :; do
+        read -r line || break
+        line="$(printf "$line" | sed -r 's/ +$//')"
+        case "$line" in
+            '##'*)
+                ;;
+            '# '*)
+                printf %s\\n "${line#??}"
+                ;;
+            '#')
+                printf \\n
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+}
+format_help_text() {
+    width="$(tput cols)" || width="${COLUMNS:-80}"
+    if [ 20 -ge "$width" ]; then
+        width=20
+    elif [ 100 -le "$width" ]; then
+        width=100
+    fi
+    fmt -w"$width"
+}
+main "$1"
