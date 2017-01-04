@@ -111,10 +111,10 @@ extract_help_text() {
 }
 format_help_text() {
     width="$(tput cols)" || width="${COLUMNS:-80}"
-    if [ 20 -ge "$width" ]; then
+    if [ 75 -le "$width" ]; then
+        width=75
+    elif [ 20 -ge "$width" ]; then
         width=20
-    elif [ 100 -le "$width" ]; then
-        width=100
     fi
     fmt -w"$width"
 }
