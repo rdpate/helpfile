@@ -64,9 +64,8 @@ main() {
 }
 output_help() {
     read -r line || fatal 69 "help text not found: $1"
-    line="$(printf "$line" | sed -r 's/ *$//; s/^#! +/#!/')"
     case "$line" in
-        '#!/bin/sh' | '#!/bin/sh '*) ;;
+        '#!'*) ;;
         *)
             return 2
             ;;
