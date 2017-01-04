@@ -49,6 +49,11 @@ if [ $# -eq 0 ]; then
 elif [ $# -gt 1 ]; then
     fatal 64 'subsections not yet supported'
 fi
+if [ -t 1 ]; then
+    terminal_output=true
+else
+    terminal_output=false
+fi
 main() {
     command="$(which "$1")" || fatal 69 "unknown command: $1"
     rc=0
@@ -75,7 +80,7 @@ output_help() {
         line="$(printf "$line" | sed -r 's/ *$//')"
         case "$line" in
             '#.help')
-                if [ -t 1 ]; then
+                if $terminal_output; then
                     extract_help_text | format_help_text | "${PAGER:-less}"
                 else
                     extract_help_text | format_help_text
@@ -110,12 +115,16 @@ extract_help_text() {
     done
 }
 format_help_text() {
-    width="$(tput cols)" || width="${COLUMNS:-80}"
+    if $terminal_output; then
+        width="$(tput cols)" || width="${COLUMNS:-80}"
+    else
+        width="${COLUMNS:-80}"
+    fi
     if [ 75 -le "$width" ]; then
         width=75
     elif [ 20 -ge "$width" ]; then
         width=20
     fi
-    fmt -w"$width"
+    fold -s -w"$width" | sed -r 's/ +$//'
 }
 main "$1"
