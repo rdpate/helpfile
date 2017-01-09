@@ -3,14 +3,46 @@
 # help COMMAND
 #
 # Show help for COMMAND.
+#
+# Options:
+#     --location    show location of help text instead
+#     --max-wrap=N  wrap lines to max length of N
+#     --no-wrap     don't wrap lines
 
 fatal() {
     printf %s\\n "$(basename "$0") error: $2" >&2
     exit "$1"
 }
 
+location_only=false
+wrap=true
+min_width=20
+max_width=75
+if [ -t 1 ]; then
+    stdout_terminal=true
+else
+    stdout_terminal=false
+fi
 handle_option() {
     case "$1" in
+        location)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            location_only=true
+            ;;
+        no-wrap)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            wrap=false
+            ;;
+        max-wrap)
+            [ $# = 2 ] || fatal 64 "missing value for option $1"
+            if [ x"$2" = x0 -o x"$2" != x"$(printf %s "$2" | tr -c -d 0-9)" ]; then
+                fatal 64 "invalid value for option $1"
+            fi
+            max_width="$(($2 + 0))"
+            if ! [ 0 -lt "$max_width" ]; then
+                fatal 64 "invalid value for option $1"
+            fi
+            ;;
         *)
             fatal 64 "unknown option: $1"
             ;;
@@ -50,14 +82,6 @@ elif [ $# -gt 1 ]; then
     fatal 64 'subsections not yet supported'
 fi
 
-min_width=20
-max_width=75
-if [ -t 1 ]; then
-    stdout_terminal=true
-else
-    stdout_terminal=false
-fi
-
 main() {
     command="$(which "$1")" || fatal 69 "unknown command: $1"
     if inline_help "$1" <"$command"; then
@@ -88,7 +112,11 @@ inline_help() {
         line="$(printf "$line" | sed -r 's/ *$//')"
         case "$line" in
             '#.help')
-                extract_help_text | output_text
+                if $location_only; then
+                    printf 'inline %s\n' "$command"
+                else
+                    extract_help_text | output_text
+                fi
                 return
                 ;;
             '#'*)
@@ -124,7 +152,11 @@ file_help() {
         dirname="$(dirname "$1")"
         target="$dirname/helptext/$(basename "$1").txt"
         if [ -e "$target" ]; then
-            output_text <"$target"
+            if $location_only; then
+                printf 'file %s\n' "$target"
+            else
+                output_text <"$target"
+            fi
             break
         fi
         if [ -L "$1" ]; then
@@ -144,6 +176,15 @@ file_help() {
 }
 
 output_text() {
+    if ! $wrap; then
+        if $stdout_terminal; then
+            "${PAGER:-less}"
+        else
+            cat
+        fi
+        return
+    fi
+
     if $stdout_terminal; then
         width="$(tput cols)" || width="${COLUMNS:-80}"
     else
