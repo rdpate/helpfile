@@ -35,13 +35,13 @@ handle_option() {
             ;;
         max-wrap)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
-            if [ x"$2" = x0 -o x"$2" != x"$(printf %s "$2" | tr -c -d 0-9)" ]; then
+            case "$2" in
+                0*) fatal 64 "invalid value for option $1" ;;
+            esac
+            if [ x"$2" != x"$(printf %s "$2" | tr -c -d 0-9)" ]; then
                 fatal 64 "invalid value for option $1"
             fi
-            max_width="$(($2 + 0))"
-            if ! [ 0 -lt "$max_width" ]; then
-                fatal 64 "invalid value for option $1"
-            fi
+            max_width="$2"
             ;;
         *)
             fatal 64 "unknown option: $1"
