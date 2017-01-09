@@ -49,16 +49,23 @@ if [ $# -eq 0 ]; then
 elif [ $# -gt 1 ]; then
     fatal 64 'subsections not yet supported'
 fi
+
+min_width=20
+max_width=75
 if [ -t 1 ]; then
-    terminal_output=true
+    stdout_terminal=true
 else
-    terminal_output=false
+    stdout_terminal=false
 fi
+
 main() {
     command="$(which "$1")" || fatal 69 "unknown command: $1"
-    rc=0
-    output_help "$1" <"$command" || rc=$?
-    if [ "$rc" = 2 ]; then
+    if inline_help "$1" <"$command"; then
+        return
+    elif [ "$?" = 2 ]; then
+        if file_help "$1"; then
+            return
+        fi
         case "$1" in
             */*)
                 fatal 69 "help text not found: $1"
@@ -67,7 +74,8 @@ main() {
         exec man 1 "$1"
     fi
 }
-output_help() {
+
+inline_help() {
     read -r line || fatal 69 "help text not found: $1"
     case "$line" in
         '#!'*) ;;
@@ -80,11 +88,7 @@ output_help() {
         line="$(printf "$line" | sed -r 's/ *$//')"
         case "$line" in
             '#.help')
-                if $terminal_output; then
-                    extract_help_text | format_help_text | "${PAGER:-less}"
-                else
-                    extract_help_text | format_help_text
-                fi
+                extract_help_text | output_text
                 return
                 ;;
             '#'*)
@@ -114,17 +118,48 @@ extract_help_text() {
         esac
     done
 }
-format_help_text() {
-    if $terminal_output; then
+
+file_help() {
+    while :; do
+        dirname="$(dirname "$1")"
+        target="$dirname/helptext/$(basename "$1").txt"
+        if [ -e "$target" ]; then
+            output_text <"$target"
+            break
+        fi
+        if [ -L "$1" ]; then
+            link="$(readlink "$1")"
+            case "$link" in
+                /*)
+                    set -- "$link"
+                    ;;
+                *)
+                    set -- "$dirname/$link"
+                    ;;
+            esac
+        else
+            return 1
+        fi
+    done
+}
+
+output_text() {
+    if $stdout_terminal; then
         width="$(tput cols)" || width="${COLUMNS:-80}"
     else
         width="${COLUMNS:-80}"
     fi
-    if [ 75 -le "$width" ]; then
-        width=75
-    elif [ 20 -ge "$width" ]; then
-        width=20
+    if [ "$max_width" -le "$width" ]; then
+        width="$max_width"
+    elif [ "$min_width" -ge "$width" ]; then
+        width="$min_width"
     fi
-    fold -s -w"$width" | sed -r 's/ +$//'
+
+    if $stdout_terminal; then
+        fold -s -w"$width" | sed -r 's/ +$//' | "${PAGER:-less}"
+    else
+        fold -s -w"$width" | sed -r 's/ +$//'
+    fi
 }
+
 main "$1"

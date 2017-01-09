@@ -1,0 +1,4 @@
+#!/bin/sh -ue
+#.help
+# Example of inline help text.
+exec "$(dirname "$0")/../bin/help" "$0"

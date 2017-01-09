@@ -1,0 +1,2 @@
+#!/bin/sh -ue
+exec "$(dirname "$0")/../bin/help" "$0"
