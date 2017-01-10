@@ -3,13 +3,15 @@ Help
 
 Help displays an overview of a command's purpose, options, and other closely related information.  It replaces the --help "option" popular with some programs.
 
-Help text is not a substitute for manual pages or other documentation.  It is only available for commands and thus uses a command name with a $PATH lookup.  The text itself can either be specified in the executable file (for scripts) or in a file alongside the executable.
+Help text is not a substitute for manual pages or other documentation.  It is only available for commands and thus a command name without a slash follows a $PATH lookup.  The text itself can either be specified in a file alongside the executable (generally preferred) or in the executable file (for self-contained scripts).
 
-The text itself has several guidelines:
+
+Help Text Requirements & Guidelines
+-----------------------------------
 
 - prefer ASCII if convenient, otherwise the text must be UTF-8
-- do not hard-wrap lines, they will be wrapped according to the user's preferences and current display, which may not be a terminal
-- first line is a synopsis of the command including the command name, eg. "command FOO [BAR..]", followed by a blank line
+- do not hard-wrap lines, they will be wrapped according to the user's preferences and current display (which may not be a terminal)
+- a synopsis of the command (including the command name) should be at the top, eg. "command FOO [BAR..]", followed by a blank line
 - no markup
 - no leading or trailing blank lines
 - every line, including the last, should end with a newline
