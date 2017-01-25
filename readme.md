@@ -3,7 +3,7 @@ Help
 
 Help displays an overview of a command's purpose, options, version, and other closely related information.  Help replaces the "options" of --help and --version and does not require executing files, which may be non-functional or untrusted.
 
-Help text is not a substitute for manual pages or other documentation.  Help text is looked up by commands; a command name without a slash follows a $PATH lookup.  The text itself can either be specified in a file alongside the executable or inside a self-contained script.
+Help text is not a substitute for manual pages or other documentation.  Help text is looked up by filename; a name without a slash follows a $PATH lookup.  The text itself can either be specified in a file or inside a self-contained script.
 
 
 Text Requirements
@@ -20,7 +20,6 @@ Text Requirements
     - the version string SHOULD be formatted according to semver.org
     - whether version strings may be compared according to semver.org is OPTIONAL
     - if unknown or missing, the version string MUST NOT be blank and SHOULD be "unknown"
-    - for inline version sections, the version string MUST be included in the section header and MUST NOT be followed by a blank line
 
 
 Help Sections
@@ -49,12 +48,9 @@ If the sections are still not found, internal sections are searched.
 Section Locales
 ---------------
 
-The desired locale is the first non-empty environment variable of either $LC\_ALL, $LC\_CTYPE, or $LANG.  This value must start with "language[\_country]", where language is two ASCII letters and country, if present, is also two ASCII letters.
-
-If the user-specified locale is not found and includes a country, the country is removed.  If a locale is still not found, "en" is used if present.
+The desired locale is the first non-empty environment variable of either $LC\_ALL, $LC\_CTYPE, or $LANG.  This value must start with "language[\_country]", where language is two ASCII letters and country, if present, is also two ASCII letters.  This value is converted to lowercase.  Help files are searched to find the first file matching "language\_country", "language", or "en".
 
 Internal sections do not specify a locale and cannot be localized.
-<!-- TODO: should they specify a locale? -->
 
 
 Internal Sections
@@ -91,10 +87,10 @@ Future Ideas
 ------------
 
 - alternative implementations should be possible, and every feature must keep that in mind
-    - allow for user config such as whether to use a pager or another file viewer (such as a browser)
-- don't use "which command", which excludes files not executable by the current user
+    - allow for user config such as whether to use a pager or another file viewer (such as a browser), or to fallback to man (or something else)
 - sections for "compound commands" (eg. hg, git)
     - will not support dynamic compound commands, where code must be executed to determine the final command (eg. hg and git aliases in .hgrc and .git/config)
 - more formats than plain text, such as Markdown
+    - probably only one more format, considering alternative implementations must support it too, and Markdown may not be it
 - machine-readable specification for options and arguments to aid command completion
     - more general "properties" specification? (such as documentation URL) but quickly getting more complex than required

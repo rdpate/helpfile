@@ -100,7 +100,7 @@ fi
 if [ -z "$desired_locale" ]; then
     desired_locale="${LC_ALL:-${LC_CTYPE:-${LANG:-en}}}"
 fi
-desired_locale="$(printf %s "$desired_locale" | sed -r 's/^(..)(_..)?.*/\1\2/')"
+desired_locale="$(printf %s "$desired_locale" | sed -r 's/^(..)(_..)?.*/\1\2/' | tr A-Z a-z)"
 desired_lang="${desired_locale%_*}"
 if [ en = "$desired_lang" ]; then
     fallback_lang=
