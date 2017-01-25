@@ -1,4 +1,0 @@
-synopsis command line(s)
-
-Help text in file alongside program.
-# comment

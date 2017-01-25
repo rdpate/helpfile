@@ -1,0 +1,4 @@
+examples/separate
+
+Help text in separate file.
+# comment

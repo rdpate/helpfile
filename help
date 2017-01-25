@@ -2,18 +2,18 @@
 #.version
 # 0.0.0
 #.help
-# help COMMAND
-# help --version COMMAND
+# help COMMAND [SUBTOPIC..]
+# help --version COMMAND [SUBTOPIC..]
 #
-# Show COMMAND's help or version.
+# Show COMMAND's help or version, either overview or for SUBTOPIC.  If COMMAND does not contain "/", it is looked up through $PATH (use ./file to explicitly specify file in the current directory).
 #
 # Options:
 # -v  --version     version text instead of help text
 # -s  --short       help synopsis (or version string) only
+#     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+#
 #     --wrap=N      wrap lines to N width or 0 for no wrap
 #     --no-wrap     --wrap=0
-#
-#     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 
 fatal() {
     printf %s\\n "$(basename "$0") error: $2" >&2
@@ -93,8 +93,6 @@ done
 
 if [ $# -eq 0 ]; then
     fatal 64 'expected arguments: COMMAND'
-elif [ $# -gt 1 ]; then
-    fatal 70 'TODO: subsections not yet supported'
 fi
 
 if [ -z "$desired_locale" ]; then
@@ -109,8 +107,9 @@ else
 fi
 
 main() {
-    local command
-    command="$(which_file "$1")" || case $? in
+    local command file
+    command="$1"
+    file="$(which_file "$1")" || case $? in
         2)
             fatal 69 "not found in PATH: $1"
             ;;
@@ -118,36 +117,24 @@ main() {
             fatal 70 "file missing: $1"
             ;;
     esac
-    case "$mode" in
-        help)
-            if show_helpfile help "$command"; then
-                return 0
-            elif inline_section help <"$command"; then
-                return 0
-            elif [ $? = 2 ]; then
-                case "$1" in
-                    */*) ;;
-                    *) exec man 1 "$1" ;;
-                esac
-            fi
-            fatal 69 "help not found: $1"
-            ;;
-        version)
-            if show_helpfile version "$command"; then
-                return 0
-            elif inline_section version <"$command"; then
-                return 0
-            fi
-            fatal 69 "version not found: $1"
-            ;;
-        *)
-            fatal 70 'internal error'
-            ;;
-    esac
+    shift
+    if show_helpfile "$mode" "$file" "$@"; then
+        return 0
+    elif inline_section "$mode" "$file" "$@"; then
+        return 0
+    elif [ help = "$mode" -a $# = 0 -a $? = 2 ]; then
+        case "$command" in
+            */*) ;;
+            *) exec man 1 "$command" ;;
+        esac
+    fi
+    set -- "$file" "$@"
+    fatal 69 "$mode not found: $*"
 }
 
-which_file() { # COMMAND
+which_file() { # FILE
     # Unlike which(1), only tests existance.
+    # Return 2 if not found in PATH.
     local IFS dir
     case "$1" in
         */*)
@@ -169,8 +156,14 @@ which_file() { # COMMAND
     return 2
 }
 
-inline_section() { # SECTION <lines
+inline_section() { # SECTION FILE [SUBTOPIC..]
     # Return 2 if inline section not found.
+    if [ $# != 2 ]; then
+        return 2
+    fi
+    inline_section_read "$1" <"$2"
+}
+inline_section_read() { # SECTION <lines
     local line
     read -r line || return 2
     case "$line" in
@@ -230,27 +223,33 @@ inline_extract_section_text() { # <lines
     done
 }
 
-show_helpfile() { # SECTION PATH
-    local section path dirname locale target link
+show_helpfile() { # SECTION FILE [SUBTOPIC..]
+    local section file subtopic dirname locale target link
     section="$1"
-    path="$2"
+    file="$2"
+    shift 2
+    if [ $# = 0 ]; then
+        subtopic=
+    else
+        subtopic="$(printf /%s "$@")"
+    fi
     while :; do
-        dirname="$(dirname "$path")"
+        dirname="$(dirname "$file")"
         for locale in "$desired_locale" "$desired_lang" $fallback_lang; do
-            target="$dirname/helpfile/$(basename "$path").$section.$locale.txt"
+            target="$dirname/helpfile/$(basename "$file")$subtopic.$section.$locale.txt"
             if [ -e "$target" ]; then
                 sed -r '/^#/d' "$target" | output_text
                 return 0
             fi
         done
-        if [ -L "$path" ]; then
-            link="$(readlink "$path")"
+        if [ -L "$file" ]; then
+            link="$(readlink "$file")"
             case "$link" in
                 /*)
-                    path="$link"
+                    file="$link"
                     ;;
                 *)
-                    path="$dirname/$link"
+                    file="$dirname/$link"
                     ;;
             esac
         else
