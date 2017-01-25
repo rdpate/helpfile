@@ -115,13 +115,20 @@ Future Ideas
 - alternative implementations should be possible, and every feature must keep that in mind
     - allow for user config such as whether to use a pager or another file viewer (such as a browser), or to fallback to man (or something else)
 - how should subtopics treat help synopsis and version string (--short)?
+- option to list subtopics?
 - should $PATH lookup not be default?
-    - how does this interact with possibly replacing man? eg. does "help /dev/XX" use "/dev/helpfile"?
+    - how does this interact with possibly replacing man?
+        - eg. does "help /dev/XX" use "/dev/helpfile"?
+        - how to handle ~/.file? (do not want "~/helpfile/.file.help...")
 - will not support dynamic subtopics, where code must be executed to determine the final command (eg. hg and git aliases in .hgrc and .git/config)
-- more formats than plain text, such as Markdown
-    - probably only one more format, considering alternative implementations must support it too, and Markdown may not be it
+- more formats than plain text
+    - desirable: links, anchors, italic, bold, underline
+    - maybe Markdown
+    - probably only one more format, considering alternative implementations must support it too
+        - something human-readable as text strongly preferred, allows treating it as plain text
 - machine-readable specification for options and arguments to aid command completion
     - more general "properties" specification? (such as documentation URL) but quickly getting more complex than required
-- internal sections could specify subtopic and locale through the section header
+- internal sections could specify subtopic, locale, and format through the section header
     - these must be the only metadata in the section header, and corresponds to the filename of a separate section
+    - "#.help.LOCALE.FORMAT SUBTOPIC.."? "#.SUBTOPIC.help.LOCALE.FORMAT"?
     - inline sections are exactly equivalent to the contents of a separate section with specific line munging for comments (prefixing "#" for comments and blank lines or "# " otherwise)
