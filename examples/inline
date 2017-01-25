@@ -1,4 +1,10 @@
 #!/bin/sh -ue
+#.version
+# 1.0.0
+#
+# Version details, if any.
 #.help
-# Example of inline help text.
-exec "$(dirname "$0")/../bin/help" "$0"
+# synopsis command line(s)
+#
+# Inline help text.
+exec "$(dirname "$0")/../help" "$@" "$0"

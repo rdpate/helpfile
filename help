@@ -1,0 +1,297 @@
+#!/bin/sh -ue
+#.version
+# 0.0.0
+#.help
+# help COMMAND
+# help --version COMMAND
+#
+# Show COMMAND's help or version.
+#
+# Options:
+# -v  --version     version text instead of help text
+# -s  --short       help synopsis (or version string) only
+#     --wrap=N      wrap lines to N width or 0 for no wrap
+#     --no-wrap     --wrap=0
+#
+#     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+
+fatal() {
+    printf %s\\n "$(basename "$0") error: $2" >&2
+    exit "$1"
+}
+
+mode=help
+short_output=false
+wrap=true
+min_width=20
+max_width=75
+desired_locale=
+if [ -t 1 ]; then
+    stdout_terminal=true
+else
+    stdout_terminal=false
+fi
+handle_option() {
+    case "$1" in
+        v|version)
+            mode=version
+            ;;
+        s|short)
+            short_output=true
+            ;;
+        wrap)
+            [ $# = 2 ] || fatal 64 "missing value for option $1"
+            if [ 0 = "$2" ]; then
+                wrap=false
+            else
+                if [ x"$2" != x"$(printf %s "$2" | tr -c -d 0-9)" ]; then
+                    fatal 64 "invalid numeric value for option $1"
+                fi
+                max_width="$2"
+            fi
+            ;;
+        no-wrap)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            wrap=false
+            ;;
+        locale)
+            [ $# = 2 ] || fatal 64 "expected value for option $1"
+            desired_locale="$2"
+            ;;
+        *)
+            fatal 64 "unknown option: $1"
+            ;;
+    esac
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --)
+            shift
+            break;;
+        --*=*)
+            x="${1#--}"
+            handle_option "${x%%=*}" "${x#*=}"
+            shift;;
+        --*)
+            handle_option "${1#--}"
+            shift;;
+        -?*)
+            if [ ${#1} = 2 ]; then
+                handle_option "${1#-}"
+            else
+                v="${1#??}"
+                x="${1%"$v"}"
+                handle_option "${x#-}" "$v"
+            fi
+            shift;;
+        *)
+            break;;
+    esac
+done
+
+
+if [ $# -eq 0 ]; then
+    fatal 64 'expected arguments: COMMAND'
+elif [ $# -gt 1 ]; then
+    fatal 70 'TODO: subsections not yet supported'
+fi
+
+if [ -z "$desired_locale" ]; then
+    desired_locale="${LC_ALL:-${LC_CTYPE:-${LANG:-en}}}"
+fi
+desired_locale="$(printf %s "$desired_locale" | sed -r 's/^(..)(_..)?.*/\1\2/')"
+desired_lang="${desired_locale%_*}"
+if [ en = "$desired_lang" ]; then
+    fallback_lang=
+else
+    fallback_lang=en
+fi
+
+main() {
+    local command
+    command="$(which_file "$1")" || case $? in
+        2)
+            fatal 69 "not found in PATH: $1"
+            ;;
+        *)
+            fatal 70 "file missing: $1"
+            ;;
+    esac
+    case "$mode" in
+        help)
+            if show_helpfile help "$command"; then
+                return 0
+            elif inline_section help <"$command"; then
+                return 0
+            elif [ $? = 2 ]; then
+                case "$1" in
+                    */*) ;;
+                    *) exec man 1 "$1" ;;
+                esac
+            fi
+            fatal 69 "help not found: $1"
+            ;;
+        version)
+            if show_helpfile version "$command"; then
+                return 0
+            elif inline_section version <"$command"; then
+                return 0
+            fi
+            fatal 69 "version not found: $1"
+            ;;
+        *)
+            fatal 70 'internal error'
+            ;;
+    esac
+}
+
+which_file() { # COMMAND
+    # Unlike which(1), only tests existance.
+    local IFS dir
+    case "$1" in
+        */*)
+            if [ -e "$1" ]; then
+                printf %s "$1"
+                return 0
+            else
+                return 1
+            fi
+            ;;
+    esac
+    IFS=:
+    for dir in ${PATH:-}; do
+        if [ -e "$dir/$1" ]; then
+            printf %s "$dir/$1"
+            return 0
+        fi
+    done
+    return 2
+}
+
+inline_section() { # SECTION <lines
+    # Return 2 if inline section not found.
+    local line
+    read -r line || return 2
+    case "$line" in
+        '#!'*) ;;
+        *) return 2 ;;
+    esac
+    line="$(inline_find_section "$1")" || return 2
+    inline_extract_section_text | output_text
+}
+
+readline() {
+    local line
+    read -r line || return 1
+    printf %s "$line" | sed -r 's/ +$//'
+}
+
+inline_find_section() { # NAME <lines
+    # Find section header; write any value to stdout.
+    local line
+    while :; do
+        line="$(readline)" || return 1
+        case "$line" in
+            "#.$1")
+                return 0
+                ;;
+            "#.$1 "*)
+                printf %s "$line" | sed -r 's/^[^ ]+ *//; s/ +$//'
+                return 0
+                ;;
+            '#'*)
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    done
+}
+
+inline_extract_section_text() { # <lines
+    # Read lines from stdin until end of section; write to stdout.
+    local line
+    while :; do
+        line="$(readline)" || return 0
+        case "$line" in
+            '##'*)
+                ;;
+            '# '*)
+                printf %s\\n "${line#??}"
+                ;;
+            '#')
+                printf \\n
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+}
+
+show_helpfile() { # SECTION PATH
+    local section path dirname locale target link
+    section="$1"
+    path="$2"
+    while :; do
+        dirname="$(dirname "$path")"
+        for locale in "$desired_locale" "$desired_lang" $fallback_lang; do
+            target="$dirname/helpfile/$(basename "$path").$section.$locale.txt"
+            if [ -e "$target" ]; then
+                sed -r '/^#/d' "$target" | output_text
+                return 0
+            fi
+        done
+        if [ -L "$path" ]; then
+            link="$(readlink "$path")"
+            case "$link" in
+                /*)
+                    path="$link"
+                    ;;
+                *)
+                    path="$dirname/$link"
+                    ;;
+            esac
+        else
+            return 1
+        fi
+    done
+}
+
+if $short_output; then
+    output_text() {
+        sed -n '/^$/q; p' | output_text_full
+    }
+else
+    output_text() output_text_full
+fi
+output_text_full() {
+    if ! $wrap; then
+        if $stdout_terminal; then
+            "${PAGER:-less}"
+        else
+            cat
+        fi
+        return
+    fi
+
+    if $stdout_terminal; then
+        width="$(tput cols)" || width="${COLUMNS:-80}"
+    else
+        width="${COLUMNS:-80}"
+    fi
+    if [ "$max_width" -le "$width" ]; then
+        width="$max_width"
+    elif [ "$min_width" -ge "$width" ]; then
+        width="$min_width"
+    fi
+
+    if $stdout_terminal; then
+        fold -s -w"$width" | sed -r 's/ +$//' | "${PAGER:-less}"
+    else
+        fold -s -w"$width" | sed -r 's/ +$//'
+    fi
+}
+
+main "$@"
