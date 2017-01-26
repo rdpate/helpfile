@@ -8,7 +8,7 @@ Help displays an overview of purpose, options, version, and other closely relate
 
 For names without a slash, Help follows a $PATH lookup and the file must be executable (like which(1)).  Otherwise the name is a path that need not exist, as the path will be used to find the help text.  For self-contained scripts, the help sections may be in comments (see Internal Help Sections).  If the path (either given or after lookup through $PATH) is a symlink and no section is found, the symlink is resolved and the search continues.
 
-If NAME is missing, show help for Help.
+If NAME is missing and version is not requested, show help for Help.
 
 Options
 -------
