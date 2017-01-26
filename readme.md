@@ -6,12 +6,14 @@ Help
 
 Help displays an overview of purpose, options, version, and other closely related information.  For executables, Help replaces the "options" of --help and --version and does not require executing files which may be non-functional or untrusted.
 
-For names without a slash, Help follows a $PATH lookup and the file must be executable (like which(1)).  Otherwise the name is a path that need not exist, as the path will be used to find the help text.  For self-contained scripts, the help sections may be in comments (see Internal Help Sections).  If the path (either given or after lookup through $PATH) is a symlink and no Help section is found, the symlink is resolved and the search continues.
+For names without a slash, Help follows a $PATH lookup and the file must be executable (like which(1)).  Otherwise the name is a path that need not exist, as the path will be used to find the help text.  For self-contained scripts, the help sections may be in comments (see Internal Help Sections).  If the path (either given or after lookup through $PATH) is a symlink and no section is found, the symlink is resolved and the search continues.
+
+If NAME is missing, show help for Help.
 
 Options
 -------
 
-    -v  --version     version text instead of help text
+    -v  --version     version instead of help
     -s  --short       help synopsis (or version string) only
         --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 

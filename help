@@ -2,13 +2,13 @@
 #.version
 # 0.0.0
 #.help
-# help COMMAND [SUBTOPIC..]
-# help --version COMMAND [SUBTOPIC..]
+# help NAME [SUBTOPIC..]
+# help --version NAME [SUBTOPIC..]
 #
-# Show COMMAND's help or version, either overview or for SUBTOPIC.  If COMMAND does not contain "/", it is looked up through $PATH (use ./file to explicitly specify file in the current directory).
+# Show NAME's help or version, either overview or for SUBTOPIC.  If NAME does not contain "/", it is looked up through $PATH (use ./file for files in the current directory).
 #
 # Options:
-# -v  --version     version text instead of help text
+# -v  --version     version instead of help
 # -s  --short       help synopsis (or version string) only
 #     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 #
@@ -20,7 +20,7 @@ fatal() {
     exit "$1"
 }
 
-mode=help
+section=help
 short_output=false
 wrap=true
 min_width=20
@@ -34,7 +34,7 @@ fi
 handle_option() {
     case "$1" in
         v|version)
-            mode=version
+            section=version
             ;;
         s|short)
             short_output=true
@@ -92,7 +92,11 @@ done
 
 
 if [ $# -eq 0 ]; then
-    fatal 64 'expected arguments: COMMAND'
+    if [ help = "$section" ]; then
+        set -- "$0"
+    else
+        fatal 64 'expected arguments: NAME'
+    fi
 fi
 
 if [ -z "$desired_locale" ]; then
@@ -116,18 +120,18 @@ main() {
             ;;
     esac
     shift
-    if show_helpfile "$mode" "$file" "$@"; then
+    if show_helpfile "$section" "$file" "$@"; then
         return 0
-    elif inline_section "$mode" "$file" "$@"; then
+    elif inline_section "$section" "$file" "$@"; then
         return 0
-    elif [ help = "$mode" -a $# = 0 -a $? = 2 ]; then
+    elif [ help = "$section" -a $# = 0 -a $? = 2 ]; then
         case "$command" in
             */*) ;;
             *) exec man 1 "$command" ;;
         esac
     fi
     set -- "$file" "$@"
-    fatal 69 "$mode not found: $*"
+    fatal 69 "$section not found: $*"
 }
 
 inline_section() { # SECTION FILE [SUBTOPIC..]
