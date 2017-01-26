@@ -97,6 +97,12 @@ if [ $# -eq 0 ]; then
     else
         fatal 64 'expected arguments: NAME'
     fi
+else
+    for x; do
+        if [ '' = "$x" ]; then
+            fatal 64 'unexpected empty argument'
+        fi
+    done
 fi
 
 if [ -z "$desired_locale" ]; then
