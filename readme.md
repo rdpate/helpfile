@@ -1,10 +1,12 @@
 Help
 ====
 
-    help COMMAND [SUBTOPIC..]
-    help --version COMMAND [SUBTOPIC..]
+    help NAME [SUBTOPIC..]
+    help --version NAME [SUBTOPIC..]
 
-Help displays an overview of a command's purpose, options, version, and other closely related information.  Help replaces the "options" of --help and --version and does not require executing files, which may be non-functional or untrusted.  Help text is looked up by filename; a name without a slash follows a $PATH lookup.  The text can either be in a separate file or inside a self-contained script.
+Help displays an overview of purpose, options, version, and other closely related information.  For executables, Help replaces the "options" of --help and --version and does not require executing files which may be non-functional or untrusted.
+
+For names without a slash, Help follows a $PATH lookup and the file must be executable (like which(1)).  Otherwise the name is a path that need not exist, as the path will be used to find the help text.  For self-contained scripts, the help sections may be in comments (see Internal Help Sections).  If the path (either given or after lookup through $PATH) is a symlink and no Help section is found, the symlink is resolved and the search continues.
 
 Options
 -------
@@ -22,13 +24,13 @@ This implementation of Help also supports some formatting options:
 Help Sections
 -------------
 
-Help text is divided by section into files located in a "helpfile" subdirectory in the same directory as the command they describe, named after the file plus subtopic, section type, language, and file format, separated by periods.  The command may include periods, but no other component may.
+Help text is divided by section into files located in a "helpfile" subdirectory in the same directory as the file they describe, named after the file plus subtopic, section type, language, and file format, separated by periods.  The file may include periods, but no other component may.
 
     /path/to/file
     /path/to/helpfile/file.help.en.txt
     /path/to/helpfile/file.version.en.txt
 
-If not present and the command is a symlink, it is recursively resolved until either the sections are found or the command is no longer a symlink:
+If not present and the file is a symlink, it is recursively resolved until either the sections are found or the file is no longer a symlink:
 
     $ which example
     /path/to/example
@@ -63,8 +65,8 @@ The desired locale is the first non-empty environment variable of either $LC\_AL
 Internal sections do not specify a locale and cannot be localized.
 
 
-Internal Sections
------------------
+Internal Help Sections
+----------------------
 
 A script whose first line starts with "#!" may have internal sections.  These must be immediately following that first line in consecutive lines which all start with "#".  A section header starts with "#." followed by the section name, and following lines are in that section.  A section line starting with "##" is excluded, starting with "# " is included, and either blank or starting with anything else ends the section.
 
@@ -90,7 +92,7 @@ Internal sections are for convenient self-contained scripts, but separate sectio
 Comparison to Manpages
 ----------------------
 
-Manpages should contain more depth than help text and should be preferred when an overview is insufficient.  Help may even default to "man 1 COMMAND" when help text is not found.  However, help text is easier to specify, better fulfills its role, does not require installation, and isn't closely tied to terminal capabilities or restrictions.
+Manpages should contain more depth than help text and should be preferred when an overview is insufficient.  Implementations of Help may even default to "man 1 COMMAND" when help text is not found (and Help is given a name without a slash).  However, help text is easier to specify, better fulfills its role, does not require installation, and isn't closely tied to terminal capabilities or restrictions.
 
 
 Text Requirements
@@ -102,7 +104,8 @@ Text Requirements
 - text MUST NOT contain markup or leading/trailing blank lines
 - text lines MUST end with a newline, including the last line
 - text MUST NOT contain control characters (besides newline), including carriage return and tab
-- for help sections, a synopsis of the command (including the command name) MUST be at the top, eg. "command FOO [BAR..]", followed by a blank line if text follows
+- for help sections, a synopsis MUST be at the top followed by a blank line if text follows
+- for help sections on commands, the synopsis MUST include the command name and common forms, eg. "command FOO [BAR..]"
 - for version sections, the version string MUST be the first line followed by a blank line if text follows
     - the version string SHOULD be formatted according to semver.org
     - whether version strings may be compared according to semver.org is OPTIONAL

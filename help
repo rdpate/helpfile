@@ -109,12 +109,10 @@ fi
 main() {
     local command file
     command="$1"
-    file="$(which_file "$1")" || case $? in
-        2)
-            fatal 69 "not found in PATH: $1"
-            ;;
+    case "$1" in
+        */*) file="$1" ;;
         *)
-            fatal 70 "file missing: $1"
+            file="$(which "$1" 2>/dev/null)" || fatal 69 "not found in PATH: $1"
             ;;
     esac
     shift
@@ -130,30 +128,6 @@ main() {
     fi
     set -- "$file" "$@"
     fatal 69 "$mode not found: $*"
-}
-
-which_file() { # FILE
-    # Unlike which(1), only tests existance.
-    # Return 2 if not found in PATH.
-    local IFS dir
-    case "$1" in
-        */*)
-            if [ -e "$1" ]; then
-                printf %s "$1"
-                return 0
-            else
-                return 1
-            fi
-            ;;
-    esac
-    IFS=:
-    for dir in ${PATH:-}; do
-        if [ -e "$dir/$1" ]; then
-            printf %s "$dir/$1"
-            return 0
-        fi
-    done
-    return 2
 }
 
 inline_section() { # SECTION FILE [SUBTOPIC..]
