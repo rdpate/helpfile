@@ -109,11 +109,21 @@ if [ -z "$desired_locale" ]; then
     desired_locale="${LC_ALL:-${LC_CTYPE:-${LANG:-en}}}"
 fi
 desired_locale="$(printf %s "$desired_locale" | sed -r 's/^(..)(_..)?.*/\1\2/' | tr A-Z a-z)"
+case "$desired_locale" in
+    [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]|[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
+        ;;
+    *)
+        desired_locale=en
+        ;;
+esac
 desired_lang="${desired_locale%_*}"
 if [ en = "$desired_lang" ]; then
     fallback_lang=
 else
     fallback_lang=en
+fi
+if [ x"$desired_locale" = x"$desired_lang" ]; then
+    desired_lang=
 fi
 
 main() {
@@ -205,7 +215,7 @@ show_helpfile() { # SECTION FILE [SUBTOPIC..]
     fi
     while :; do
         dirname="$(dirname "$file")"
-        for locale in "$desired_locale" "$desired_lang" $fallback_lang; do
+        for locale in "$desired_locale" $desired_lang $fallback_lang; do
             target="$dirname/helpfile/$(basename "$file")$subtopic.$section.$locale.txt"
             if [ -e "$target" ]; then
                 sed -r '/^#/d' "$target" | output_text
