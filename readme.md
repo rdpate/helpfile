@@ -70,7 +70,7 @@ Internal Help Sections
 
 Internal sections are for convenient self-contained scripts (or any file) using "#"-lines as comments, but separate section files are preferred.  Internal sections cannot specify subtopics or locales.
 
-A file whose first line starts with "#" may have internal sections.  These sections must be contained within consecutive lines at the start of the file and all starting with "#".  A section header starts with "#." followed by the section name.  A section line starts with "##" (excluded as a comment), starts with "# " (included with "# " removed), or is exactly "#" (a blank line after removing "#").  Any other line starting with "#" is not in that section.  Any other line not starting with "#" (including a blank line) ends all sections.
+A file whose first line starts with "#" may have internal sections.  These sections must be within consecutive lines at the start of the file all starting with "#".  A section header starts with "#." followed by the section name.  A section line starts with "##" (excluded as a comment), starts with "# " (included with "# " removed), or is exactly "#" (a blank line after removing "#").  Any other line starting with "#" is not in that section.  Any other line not starting with "#" (including a blank line) ends all sections.
 
     #!/anything/here
     # not in any section
