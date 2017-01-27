@@ -25,7 +25,7 @@ short_output=false
 wrap=true
 min_width=20
 max_width=75
-desired_locale=
+user_lang_country=
 if [ -t 1 ]; then
     stdout_terminal=true
 else
@@ -56,7 +56,7 @@ handle_option() {
             ;;
         locale)
             [ $# = 2 ] || fatal 64 "expected value for option $1"
-            desired_locale="$2"
+            user_lang_country="$2"
             ;;
         *)
             fatal 64 "unknown option: $1"
@@ -105,26 +105,23 @@ else
     done
 fi
 
-if [ -z "$desired_locale" ]; then
-    desired_locale="${LC_ALL:-${LC_CTYPE:-${LANG:-en}}}"
+if [ -z "$user_lang_country" ]; then
+    user_lang_country="${LC_ALL:-${LC_CTYPE:-${LANG:-en}}}"
 fi
-desired_locale="$(printf %s "$desired_locale" | sed -r 's/^(..)(_..)?.*/\1\2/' | tr A-Z a-z)"
-case "$desired_locale" in
-    [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]|[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
+user_lang_country="$(printf %s "$user_lang_country" | sed -r 's/^(..)(_..)?.*/\1\2/' | tr A-Z a-z)"
+case "$user_lang_country" in
+    [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
+        user_lang="$user_lang_country"
+        user_lang_country=
+        ;;
+    [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
+        user_lang="${user_lang_country%_*}"
         ;;
     *)
-        desired_locale=en
+        user_lang_country=
+        user_lang=en
         ;;
 esac
-desired_lang="${desired_locale%_*}"
-if [ en = "$desired_lang" ]; then
-    fallback_lang=
-else
-    fallback_lang=en
-fi
-if [ x"$desired_locale" = x"$desired_lang" ]; then
-    desired_lang=
-fi
 
 main() {
     local command file
@@ -204,7 +201,7 @@ inline_extract_section_text() { # <lines
 }
 
 show_helpfile() { # SECTION FILE [SUBTOPIC..]
-    local section file subtopic dirname locale target link
+    local section file subtopic dirname target link
     section="$1"
     file="$2"
     shift 2
@@ -215,13 +212,10 @@ show_helpfile() { # SECTION FILE [SUBTOPIC..]
     fi
     while :; do
         dirname="$(dirname "$file")"
-        for locale in "$desired_locale" $desired_lang $fallback_lang; do
-            target="$dirname/helpfile/$(basename "$file")$subtopic.$section.$locale.txt"
-            if [ -e "$target" ]; then
-                sed -r '/^#/d' "$target" | output_text
-                return 0
-            fi
-        done
+        if target="$(locale_helpfile "$dirname/helpfile/$(basename "$file")$subtopic.$section")"; then
+            sed -r '/^#/d' "$target" | output_text
+            return $?
+        fi
         if [ -L "$file" ]; then
             link="$(readlink "$file")"
             case "$link" in
@@ -236,6 +230,30 @@ show_helpfile() { # SECTION FILE [SUBTOPIC..]
             return 1
         fi
     done
+}
+
+locale_helpfile() { # BASE
+    local locale target
+    for locale in $user_lang_country $user_lang; do
+        target="$1.$locale.txt"
+        if [ -e "$target" ]; then
+            printf %s "$target"
+            return 0
+        fi
+    done
+    for target in "$1.$user_lang"_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
+        if [ -e "$target" ]; then
+            printf %s "$target"
+            return 0
+        fi
+    done
+    for target in "$1.en.txt" "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
+        if [ -e "$target" ]; then
+            printf %s "$target"
+            return 0
+        fi
+    done
+    return 1
 }
 
 if $short_output; then

@@ -60,7 +60,9 @@ A helpfile may have subtopics.  These are in directories named after the parents
 Section Locales
 ---------------
 
-The desired locale is the first non-empty environment variable of either $LC\_ALL, $LC\_CTYPE, or $LANG.  This value is converted to lowercase and must start with "language[\_country]", where language is two ASCII letters and country, if present, is also two ASCII letters; any other value is ignored and "en" is used.  Help files are searched to find the first section matching "language\_country", "language", or "en", in that order.
+The desired locale is given by --locale, or otherwise the first non-empty environment variable of either $LC\_ALL, $LC\_CTYPE, or $LANG.  This value is converted to lowercase and must start with "language[\_country]", where language is two ASCII letters and country, if present, is also two ASCII letters; any other value is ignored and "en" is used.
+
+Help files are searched to find the first matching "language\_country", "language", "language" with any country (order unspecified), "en", any language without country (order unspecified), or any language with country (order unspecified).
 
 
 Internal Help Sections
