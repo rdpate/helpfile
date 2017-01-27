@@ -6,7 +6,7 @@ Help
 
 Help displays an overview of purpose, options, version, and other closely related information.  For executables, Help replaces the "options" of --help and --version and does not require executing files which may be non-functional or untrusted.
 
-For names without a slash, Help follows a $PATH lookup and the file must be executable (like which(1)).  Otherwise the name is a path that need not exist, as the path will be used to find the help text.  For self-contained scripts, the help sections may be in comments (see Internal Help Sections).  If the path (either given or after lookup through $PATH) is a symlink and no section is found, the symlink is resolved and the search continues.
+For names without a slash, Help follows a $PATH lookup and the file must be executable (like which(1)).  Otherwise the name is a path that need not exist, as the path will be used to find the help text.
 
 If NAME is missing and version is not requested, show help for Help.
 
@@ -32,7 +32,7 @@ Help text is divided by section into files located in a "helpfile" subdirectory 
     /path/to/helpfile/file.help.en.txt
     /path/to/helpfile/file.version.en.txt
 
-If not present and the file is a symlink, it is recursively resolved until either the sections are found or the file is no longer a symlink:
+If a section is not found and the parent file is a symlink, it is recursively resolved until either the section is found or the file is no longer a symlink:
 
     $ which example
     /path/to/example
@@ -43,7 +43,7 @@ If not present and the file is a symlink, it is recursively resolved until eithe
     $ ls /path/to/../../another/path/helpfile/another-name.help.en.txt
     /path/to/../../another/path/helpfile/another-name.help.en.txt
 
-If the sections are still not found, internal sections are searched.
+If the sections are still not found, internal sections are searched (see Internal Help Sections).
 
 
 Subtopics
@@ -56,21 +56,19 @@ A helpfile may have subtopics.  These are in directories named after the parents
     /path/to/helpfile/file/subtopic.help.en.txt
     /path/to/helpfile/file/subtopic/subsubtopic.help.en.txt
 
-Internal sections cannot have subtopics.
-
 
 Section Locales
 ---------------
 
-The desired locale is the first non-empty environment variable of either $LC\_ALL, $LC\_CTYPE, or $LANG.  This value must start with "language[\_country]", where language is two ASCII letters and country, if present, is also two ASCII letters.  This value is converted to lowercase.  Help files are searched to find the first file matching "language\_country", "language", or "en".
-
-Internal sections do not specify a locale and cannot be localized.
+The desired locale is the first non-empty environment variable of either $LC\_ALL, $LC\_CTYPE, or $LANG.  This value is converted to lowercase and must start with "language[\_country]", where language is two ASCII letters and country, if present, is also two ASCII letters.  Help files are searched to find the first section matching "language\_country", "language", or "en", in that order.
 
 
 Internal Help Sections
 ----------------------
 
-A script whose first line starts with "#!" may have internal sections.  These must be immediately following that first line in consecutive lines which all start with "#".  A section header starts with "#." followed by the section name, and following lines are in that section.  A section line starting with "##" is excluded, starting with "# " is included, and either blank or starting with anything else ends the section.
+Internal sections are for convenient self-contained scripts (or any file) using "#"-lines as comments, but separate section files are preferred.  Internal sections cannot specify subtopics or locales.
+
+A file whose first line starts with "#" may have internal sections.  These sections must be contained within consecutive lines at the start of the file and all starting with "#".  A section header starts with "#." followed by the section name.  A section line starts with "##" (excluded as a comment), starts with "# " (included with "# " removed), or is exactly "#" (a blank line after removing "#").  Any other line starting with "#" is not in that section.  Any other line not starting with "#" (including a blank line) ends all sections.
 
     #!/anything/here
     # not in any section
@@ -88,13 +86,11 @@ A script whose first line starts with "#!" may have internal sections.  These mu
     # More help text.
     not in any section
 
-Internal sections are for convenient self-contained scripts, but separate section files are preferred.
-
 
 Comparison to Manpages
 ----------------------
 
-Manpages should contain more depth than help text and should be preferred when an overview is insufficient.  Implementations of Help may even default to "man 1 COMMAND" when help text is not found (and Help is given a name without a slash).  However, help text is easier to specify, better fulfills its role, does not require installation, and isn't closely tied to terminal capabilities or restrictions.
+Manpages should contain more depth than help text and should be preferred when an overview is insufficient.  Implementations of Help may even default to "man 1 COMMAND" when help text is not found (and Help is given a name without a slash).  However, help text is easier to specify, better fulfills its role, does not require installation into a global path, and isn't closely tied to terminal capabilities or restrictions.
 
 
 Text Requirements
@@ -134,6 +130,8 @@ Future Ideas
 - machine-readable specification for options and arguments to aid command completion
     - more general "properties" specification? (such as documentation URL) but quickly getting more complex than required
 - internal sections could specify subtopic, locale, and format through the section header
-    - these must be the only metadata in the section header, and corresponds to the filename of a separate section
-    - "#.help.LOCALE.FORMAT SUBTOPIC.."? "#.SUBTOPIC.help.LOCALE.FORMAT"?
+    - these must be the only metadata in the section header, and correspond to the filename of a separate section
+    - "#.help.LOCALE.FORMAT SUBTOPIC.."?
+    - "#.help /SUBTOPIC.LOCALE.FORMAT"?
+    - "#/SUBTOPIC.help.LOCALE.FORMAT"?
     - inline sections are exactly equivalent to the contents of a separate section with specific line munging for comments (prefixing "#" for comments and blank lines or "# " otherwise)

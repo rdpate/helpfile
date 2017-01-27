@@ -149,41 +149,27 @@ inline_section() { # SECTION FILE [SUBTOPIC..]
 }
 inline_section_read() { # SECTION <lines
     local line
-    read -r line || return 2
-    case "$line" in
-        '#!'*) ;;
-        *) return 2 ;;
-    esac
-    line="$(inline_find_section "$1")" || return 2
-    inline_extract_section_text | output_text
+    while :; do
+        line="$(readline)" || return 2
+        case "$line" in
+            "#.$1"|"#.$1 "*)
+                # line="$(printf %s "$line" | sed -r 's/^[^ ]+ *//; s/ +$//')"
+                inline_extract_section_text | output_text
+                return
+                ;;
+            '#'*)
+                ;;
+            *)
+                return 2
+                ;;
+        esac
+    done
 }
 
 readline() {
     local line
     read -r line || return 1
     printf %s "$line" | sed -r 's/ +$//'
-}
-
-inline_find_section() { # NAME <lines
-    # Find section header; write any value to stdout.
-    local line
-    while :; do
-        line="$(readline)" || return 1
-        case "$line" in
-            "#.$1")
-                return 0
-                ;;
-            "#.$1 "*)
-                printf %s "$line" | sed -r 's/^[^ ]+ *//; s/ +$//'
-                return 0
-                ;;
-            '#'*)
-                ;;
-            *)
-                return 1
-                ;;
-        esac
-    done
 }
 
 inline_extract_section_text() { # <lines
