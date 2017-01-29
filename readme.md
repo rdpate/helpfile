@@ -119,12 +119,14 @@ Future Ideas
 
 - alternative implementations should be possible, and every feature must keep that in mind
     - allow for user config such as whether to use a pager or another file viewer (such as a browser), or to fallback to man (or something else)
-- how should subtopics treat help synopsis and version string (--short)?
-- option to list subtopics?
-- should $PATH lookup not be default?
-    - how does this interact with possibly replacing man?
-        - eg. does "help /dev/XX" use "/dev/helpfile"?
-        - how to handle ~/.file? (do not want "~/helpfile/.file.help...")
+- how widely applicable is --short for help sections?
+    - subtopics?
+    - non-commands?
+    - what alternative synopsis will always make sense?
+- option or separate command to list subtopics?
+- possibly replace man?
+    - eg. does "help /dev/XX" use "/dev/helpfile"?
+    - how to handle ~/.file? (do not want "~/helpfile/.file.help...")
 - will not support dynamic subtopics, where code must be executed to determine the final command (eg. hg and git aliases in .hgrc and .git/config)
 - more formats than plain text
     - desirable: links, anchors, italic, bold, underline
