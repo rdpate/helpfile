@@ -4,10 +4,12 @@
 #.help
 # help NAME [SUBTOPIC..]
 # help --version NAME [SUBTOPIC..]
+# help -c NAME [SUBTOPIC..]
 #
-# Show NAME's help or version, either overview or for SUBTOPIC.  If NAME does not contain "/", it is looked up through $PATH (use ./file for files in the current directory).
+# Show NAME's help or version, either overview or for SUBTOPIC.
 #
 # Options:
+# -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
 # -v  --version     version instead of help
 # -s  --short       help synopsis (or version string) only
 #     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
@@ -20,6 +22,7 @@ fatal() {
     exit "$1"
 }
 
+path_lookup=false
 section=help
 short_output=false
 wrap=true
@@ -33,10 +36,16 @@ else
 fi
 handle_option() {
     case "$1" in
+        c|command)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            path_lookup=true
+            ;;
         v|version)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             section=version
             ;;
         s|short)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             short_output=true
             ;;
         wrap)
@@ -126,18 +135,21 @@ esac
 main() {
     local command file
     command="$1"
-    case "$1" in
-        */*) file="$1" ;;
-        *)
-            file="$(which "$1" 2>/dev/null)" || fatal 69 "not found in PATH: $1"
-            ;;
-    esac
+    file="$1"
+    if $path_lookup; then
+        case "$1" in
+            */*) ;;
+            *)
+                file="$(which "$1" 2>/dev/null)" || fatal 69 "not found in PATH: $1"
+                ;;
+        esac
+    fi
     shift
     if show_helpfile "$section" "$file" "$@"; then
         return 0
     elif inline_section "$section" "$file" "$@"; then
         return 0
-    elif [ help = "$section" -a $# = 0 -a $? = 2 ]; then
+    elif [ $path_lookup = true -a help = "$section" -a $# = 0 -a $? = 2 ]; then
         case "$command" in
             */*) ;;
             *) exec man 1 "$command" ;;

@@ -3,16 +3,18 @@ Help
 
     help NAME [SUBTOPIC..]
     help --version NAME [SUBTOPIC..]
+    help -c NAME [SUBTOPIC..]
 
 Help displays an overview of purpose, options, version, and other closely related information.  For executables, Help replaces the "options" of --help and --version and does not require executing files which may be non-functional or untrusted.
 
-For names without a slash, Help follows a $PATH lookup and the file must be executable (like which(1)).  Otherwise the name is a path that need not exist, as the path will be used to find the help text.
+Given -c/--command, lookup through $PATH if NAME does not contain "/" (like which(1)).  Otherwise NAME need not exist, as the path will be used to find the help text.
 
 If NAME is missing and version is not requested, show help for Help.
 
 Options
 -------
 
+    -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
     -v  --version     version instead of help
     -s  --short       help synopsis (or version string) only
         --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
