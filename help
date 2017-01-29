@@ -4,16 +4,15 @@
 #.help
 # help NAME [SUBTOPIC..]
 # help --version NAME [SUBTOPIC..]
-# help -c NAME [SUBTOPIC..]
 #
 # Show NAME's help or version, either overview or for SUBTOPIC.
 #
 # Options:
-# -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
 # -v  --version     version instead of help
 # -s  --short       help synopsis (or version string) only
 #     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 #
+# -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
 #     --wrap=N      wrap lines to N width or 0 for no wrap
 #     --no-wrap     --wrap=0
 

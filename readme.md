@@ -14,13 +14,13 @@ If NAME is missing and version is not requested, show help for Help.
 Options
 -------
 
-    -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
     -v  --version     version instead of help
     -s  --short       help synopsis (or version string) only
         --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 
-This implementation of Help also supports some formatting options:
+This implementation of Help supports additional options:
 
+    -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
         --wrap=N      wrap lines to N width or 0 for no wrap
         --no-wrap     --wrap=0
 
