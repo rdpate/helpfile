@@ -28,7 +28,7 @@ This implementation of Help supports additional options:
 Help Sections
 -------------
 
-Help text is divided by section into files located in a "helpfile" subdirectory in the same directory as the file they describe, named after the file plus subtopic, section type, language, and file format, separated by periods.  The file may include periods, but no other component may.
+Help text is divided by section into files located in a "helpfile" subdirectory in the same directory as the file they describe, named after the file's basename plus subtopic, section type, language, and file format, separated by periods.  The basename may include periods, but no other component may.
 
     /path/to/file
     /path/to/helpfile/file.help.en.txt
