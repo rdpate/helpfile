@@ -223,7 +223,7 @@ show_helpfile() { # SECTION FILE [SUBTOPIC..]
     fi
     while :; do
         dirname="$(dirname "$file")"
-        if target="$(locale_helpfile "$dirname/helpfile/$(basename "$file")$subtopic.$section")"; then
+        if target="$(locale_helpfile "$dirname/help/$(basename "$file")$subtopic.$section")"; then
             sed -r '/^#/d' "$target" | output_text
             return $?
         fi

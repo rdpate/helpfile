@@ -28,22 +28,22 @@ This implementation of Help supports additional options:
 Help Sections
 -------------
 
-Help text is divided by section into files located in a "helpfile" subdirectory in the same directory as the file they describe, named after the file's basename plus subtopic, section type, language, and file format, separated by periods.  The basename may include periods, but no other component may.
+Help text is divided by section into files located in a "help" subdirectory in the same directory as the file they describe, named after the file's basename plus subtopic, section type, language, and file format, separated by periods.  The basename may include periods, but no other component may.
 
     /path/to/file
-    /path/to/helpfile/file.help.en.txt
-    /path/to/helpfile/file.version.en.txt
+    /path/to/help/file.help.en.txt
+    /path/to/help/file.version.en.txt
 
 If a section is not found and the parent file is a symlink, it is recursively resolved until either the section is found or the file is no longer a symlink:
 
     $ which example
     /path/to/example
-    $ ls /path/to/helpfile/example.help.en.txt
-    ls: /path/to/helpfile/example.help.en.txt: No such file or directory
+    $ ls /path/to/help/example.help.en.txt
+    ls: /path/to/help/example.help.en.txt: No such file or directory
     $ readlink /path/to/example
     ../../another/path/another-name
-    $ ls /path/to/../../another/path/helpfile/another-name.help.en.txt
-    /path/to/../../another/path/helpfile/another-name.help.en.txt
+    $ ls /path/to/../../another/path/help/another-name.help.en.txt
+    /path/to/../../another/path/help/another-name.help.en.txt
 
 If the sections are still not found, internal sections are searched (see Internal Help Sections).
 
@@ -51,12 +51,12 @@ If the sections are still not found, internal sections are searched (see Interna
 Subtopics
 ---------
 
-A helpfile may have subtopics.  These are in directories named after the parents.
+A help may have subtopics.  These are in directories named after the parents.
 
     /path/to/file
-    /path/to/helpfile/file.help.en.txt
-    /path/to/helpfile/file/subtopic.help.en.txt
-    /path/to/helpfile/file/subtopic/subsubtopic.help.en.txt
+    /path/to/help/file.help.en.txt
+    /path/to/help/file/subtopic.help.en.txt
+    /path/to/help/file/subtopic/subsubtopic.help.en.txt
 
 
 Section Locales
@@ -125,8 +125,8 @@ Future Ideas
     - what alternative synopsis will always make sense?
 - option or separate command to list subtopics?
 - possibly replace man?
-    - eg. does "help /dev/XX" use "/dev/helpfile"?
-    - how to handle ~/.file? (do not want "~/helpfile/.file.help...")
+    - eg. does "help /dev/XX" use "/dev/help"?
+    - how to handle ~/.file? (do not want "~/help/.file.help...")
 - will not support dynamic subtopics, where code must be executed to determine the final command (eg. hg and git aliases in .hgrc and .git/config)
 - more formats than plain text
     - desirable: links, anchors, italic, bold, underline
