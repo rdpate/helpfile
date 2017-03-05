@@ -128,7 +128,7 @@ main() {
 
 inline_section() { # SECTION FILE [SUBTOPIC..]
     # Return 2 if inline section not found.
-    if [ $# != 2 ]; then
+    if [ $# != 2 -o ! -f "$2" ]; then
         return 2
     fi
     local line
