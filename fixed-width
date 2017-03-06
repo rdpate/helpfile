@@ -2,8 +2,8 @@
 #.version
 # 0.0.0
 #.help
-# help NAME [SUBTOPIC..]
-# help --version NAME [SUBTOPIC..]
+# %help/fixed-width NAME [SUBTOPIC..]
+# %help/fixed-width --version NAME [SUBTOPIC..]
 #
 # Show NAME's help or version, either overview or for SUBTOPIC.
 #

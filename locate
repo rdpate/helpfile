@@ -2,8 +2,8 @@
 #.version
 # 0.0.0
 #.help
-# help-locate NAME [SUBTOPIC..]
-# help-locate --version NAME [SUBTOPIC..]
+# %help/locate NAME [SUBTOPIC..]
+# %help/locate --version NAME [SUBTOPIC..]
 #
 # Locate filename for NAME's help or version, either overview or for SUBTOPIC.
 #
