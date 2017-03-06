@@ -7,6 +7,8 @@
 #
 # Locate filename for NAME's help or version, either overview or for SUBTOPIC.
 #
+# Output is "file FILENAME", "internal SECTION FILENAME", or "man SECTION NAME".
+#
 # Options:
 # -v  --version     version instead of help
 #     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
