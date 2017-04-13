@@ -119,8 +119,10 @@ Comparison to Manpages
 Manpages should contain more depth than help text and should be preferred when an overview is insufficient.  Implementations of Help may even default to "man 1 COMMAND" when help text is not found (and Help is given a name without a slash).  However, help text is easier to specify, better fulfills its role, does not require installation into a global path, and isn't closely tied to terminal capabilities or restrictions.
 
 
-Text Requirements
------------------
+Text Format
+-----------
+
+The text format is mostly "plain".  Any line starting with "#" is a comment and will be ignored.  This list of requirements must be followed (and should be rewritten):
 
 - text MUST be encoded in UTF-8 without a byte-order mark
 - text SHOULD be encoded in ASCII if convenient
