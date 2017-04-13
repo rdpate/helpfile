@@ -2,40 +2,46 @@
 #.version
 # 0.0.0
 #.help
-# %help/locate NAME [SUBTOPIC..]
-# %help/locate --version NAME [SUBTOPIC..]
+# %helpfile/locate NAME [SUBTOPIC..]
 #
-# Locate filename for NAME's help or version, either overview or for SUBTOPIC.
+# Locate filename for NAME's help, either overview or for SUBTOPIC.
 #
-# Output is "file FILENAME", "internal SECTION FILENAME", or "man SECTION NAME".
+# Output on success is "file FILENAME", "internal SECTION FILENAME", or "man SECTION NAME".
 #
 # Options:
 # -v  --version     version instead of help
-#     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+#     --lang=L      use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+# -a  --all         list all matches instead of first
 #
 # -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
 
 fatal() {
-    printf %s\\n "$(basename "$0") error: $2" >&2
+    printf %s\\n "$(readlink -f "$0") error: $2" >&2
     exit "$1"
 }
 
+show_all=false
 path_lookup=false
 section=help
 user_lang_country=
+first_lang_file=
 handle_option() {
     case "$1" in
+        a|all)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            show_all=true
+            ;;
         c|command)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             path_lookup=true
             ;;
+        lang)
+            [ $# = 2 ] || fatal 64 "expected value for option $1"
+            user_lang_country="$2"
+            ;;
         v|version)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             section=version
-            ;;
-        locale)
-            [ $# = 2 ] || fatal 64 "expected value for option $1"
-            user_lang_country="$2"
             ;;
         *)
             fatal 64 "unknown option: $1"
@@ -74,72 +80,114 @@ if [ $# -eq 0 ]; then
     fatal 64 'expected arguments: NAME'
 else
     for x; do
-        if [ '' = "$x" ]; then
-            fatal 64 'unexpected empty argument'
+        case "$x" in
+            '')
+                fatal 64 'unexpected empty argument'
+                ;;
+            .*)
+                fatal 64 'invalid SUBTOPIC: leading period'
+                ;;
+        esac
+    done
+fi
+
+check_user_lang_country() {
+    user_lang_country="$(printf %s "${user_lang_country%%.*}" | tr A-Z a-z)"
+    case "$user_lang_country" in
+        [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
+            user_lang="$user_lang_country"
+            user_lang_country=
+            ;;
+        [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
+            user_lang="${user_lang_country%_*}"
+            ;;
+        *)
+            user_lang=
+            user_lang_country=
+            return 1
+            ;;
+    esac
+}
+if [ -n "$user_lang_country" ]; then
+    if [ none = "$user_lang_country" ]; then
+        user_lang=
+        user_lang_country=
+    else
+        check_user_lang_country || fatal 64 'invalid --lang value'
+    fi
+else
+    for user_lang_country in "${LC_ALL:-}" "${LC_CTYPE:-}" "${LANG:-}"; do
+        if check_user_lang_country; then
+            break
         fi
     done
 fi
 
-if [ -z "$user_lang_country" ]; then
-    user_lang_country="${LC_ALL:-${LC_CTYPE:-${LANG:-en}}}"
-fi
-user_lang_country="$(printf %s "$user_lang_country" | sed -r 's/^(..)(_..)?.*/\1\2/' | tr A-Z a-z)"
-case "$user_lang_country" in
-    [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
-        user_lang="$user_lang_country"
-        user_lang_country=
-        ;;
-    [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
-        user_lang="${user_lang_country%_*}"
-        ;;
-    *)
-        user_lang_country=
-        user_lang=en
-        ;;
-esac
-
 main() {
-    local command file
-    command="$1"
-    file="$1"
+    local orig1 file
+    orig1="$1"
     if $path_lookup; then
         case "$1" in
             */*) ;;
             *)
                 file="$(which "$1" 2>/dev/null)" || fatal 69 "not found in PATH: $1"
+                shift
+                set -- "$file" "$@"
                 ;;
         esac
     fi
-    shift
-    if show_helpfile "$section" "$file" "$@"; then
-        return 0
-    elif inline_section "$section" "$file" "$@"; then
-        return 0
-    elif [ $path_lookup = true -a help = "$section" -a $# = 0 -a $? = 2 ]; then
-        case "$command" in
-            */*) ;;
-            *)
-                printf 'man 1 %s\n' "$command"
-                return 0
-                ;;
-        esac
+    if $show_all; then
+        find_helpfile "$section" "$@" || true
+        find_internal_section "$section" "$@" || true
+        if [ $path_lookup = true -a help = "$section" -a $# = 1 ]; then
+            case "$orig1" in
+                */*) ;;
+                *' '*) ;;
+                *)
+                    printf 'man 1 %s\n' "$orig1"
+                    ;;
+            esac
+        fi
+    else
+        if find_helpfile "$section" "$@"; then
+            return 0
+        elif find_internal_section "$section" "$@"; then
+            return 0
+        elif [ $path_lookup = true -a help = "$section" -a $# = 1 ]; then
+            case "$orig1" in
+                */*) ;;
+                *' '*)
+                    fatal 69 "defaulting to man with space in command: $orig1"
+                    ;;
+                *)
+                    printf 'man 1 %s\n' "$orig1"
+                    return 0
+                    ;;
+            esac
+        fi
+        fatal 69 "$section not found: $*"
     fi
-    set -- "$file" "$@"
-    fatal 69 "$section not found: $*"
 }
 
-inline_section() { # SECTION FILE [SUBTOPIC..]
-    # Return 2 if inline section not found.
+find_internal_section() { # SECTION FILE [SUBTOPIC..]
+    # Return 2 if internal section not found.
     if [ $# != 2 -o ! -f "$2" ]; then
         return 2
     fi
+    if sed -r 's/ +$//' "$2" | find_internal_section_read "$1"; then
+        printf 'internal %s %s\n' "$1" "$2"
+        return 0
+    else
+        return 2
+    fi
+}
+find_internal_section_read() { # SECTION <lines
     local line
     while :; do
-        line="$(readline)" || return 2
+        read -r line || return 2
         case "$line" in
             "#.$1"|"#.$1 "*)
-                printf 'internal %s %s\n' "$1" "$2"
-                return
+                return 0
                 ;;
             '#'*)
                 ;;
@@ -147,17 +195,11 @@ inline_section() { # SECTION FILE [SUBTOPIC..]
                 return 2
                 ;;
         esac
-    done <"$2"
+    done
 }
 
-readline() {
-    local line
-    read -r line || return 1
-    printf %s "$line" | sed -r 's/ +$//'
-}
-
-show_helpfile() { # SECTION FILE [SUBTOPIC..]
-    local section file subtopic dirname target link
+find_helpfile() { # SECTION FILE [SUBTOPIC..]
+    local section file subtopic left right link
     section="$1"
     file="$2"
     shift 2
@@ -165,13 +207,35 @@ show_helpfile() { # SECTION FILE [SUBTOPIC..]
         subtopic=
     else
         subtopic="$(printf /%s "$@")"
+        case "$subtopic" in
+            */.*)
+                fatal 69 'invalid subtopic (leading period)'
+                ;;
+        esac
     fi
+    left=/
+    right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
+    case "$right" in */..*)
+        fatal 69 'basename with two leading periods'
+        ;;
+    esac
+    orig_right="${right#/}"
+    right="$(printf %s "$right" | sed -r 's,/\.,/,g')"
+    right="${right#/}"
     while :; do
-        dirname="$(dirname "$file")"
-        if target="$(locale_helpfile "$dirname/help/$(basename "$file")$subtopic.$section")"; then
-            printf 'file %s\n' "$target"
-            return 0
+        if find_helpfile_lang "${left}help/$right$subtopic.$section"; then
+            if ! $show_all; then
+                return 0
+            fi
         fi
+
+        case "$right" in */*)
+            left="$left${orig_right%%/*}/"
+            orig_right="${orig_right#*/}"
+            right="${right#*/}"
+            continue
+            ;;
+        esac
         if [ -L "$file" ]; then
             link="$(readlink "$file")"
             case "$link" in
@@ -179,36 +243,53 @@ show_helpfile() { # SECTION FILE [SUBTOPIC..]
                     file="$link"
                     ;;
                 *)
-                    file="$dirname/$link"
+                    file="$(dirname "$file")/$link"
                     ;;
             esac
+            left=/
+            right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
+            case "$right" in */..*)
+                fatal 69 'basename with two leading periods'
+                ;;
+            esac
+            orig_right="${right#/}"
+            right="$(printf %s "$right" | sed -r 's,/\.,/,g')"
+            right="${right#/}"
         else
+            if [ -n "$first_lang_file" ]; then
+                printf 'file %s\n' "$first_lang_file"
+                return 0
+            fi
             return 1
         fi
     done
 }
 
-locale_helpfile() { # BASE
-    local locale target
-    for locale in $user_lang_country $user_lang; do
-        target="$1.$locale.txt"
-        if [ -e "$target" ]; then
-            printf %s "$target"
-            return 0
+find_helpfile_lang() { # BASE
+    local lang target
+    if [ -n "$user_lang" ]; then
+        for lang in $user_lang_country $user_lang any; do
+            target="$1.$lang.txt"
+            if [ -e "$target" ]; then
+                printf 'file %s\n' "$target"
+                return 0
+            fi
+        done
+        if [ -z "$first_lang_file" ]; then
+            for target in "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
+                if [ -e "$target" ]; then
+                    first_lang_file="$target"
+                fi
+            done
         fi
-    done
-    for target in "$1.$user_lang"_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
-        if [ -e "$target" ]; then
-            printf %s "$target"
-            return 0
-        fi
-    done
-    for target in "$1.en.txt" "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
-        if [ -e "$target" ]; then
-            printf %s "$target"
-            return 0
-        fi
-    done
+    else
+        for target in "$1.any.txt" "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
+            if [ -e "$target" ]; then
+                printf 'file %s\n' "$target"
+                return 0
+            fi
+        done
+    fi
     return 1
 }
 

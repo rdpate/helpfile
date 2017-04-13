@@ -2,22 +2,22 @@
 #.version
 # 0.0.0
 #.help
-# %help/fixed-width NAME [SUBTOPIC..]
-# %help/fixed-width --version NAME [SUBTOPIC..]
+# %helpfile/fixed-width NAME [SUBTOPIC..]
 #
-# Show NAME's help or version, either overview or for SUBTOPIC.
+# Show NAME's help overview or SUBTOPIC help.  Output is suitable for fixed-width display.
 #
 # Options:
 # -v  --version     version instead of help
 # -s  --short       help synopsis (or version string) only
-#     --locale=L    use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+#     --lang=L      use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 #
 # -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
 #     --wrap=N      wrap lines to N width or 0 for no wrap
 #     --no-wrap     --wrap=0
 
+base_prog="$(readlink -f "$0")"
 fatal() {
-    printf %s\\n "$(basename "$0") error: $2" >&2
+    printf %s\\n "$base_prog error: $2" >&2
     exit "$1"
 }
 
@@ -27,7 +27,7 @@ short_output=false
 wrap=true
 min_width=20
 max_width=75
-user_lang_country=
+user_lang=
 if [ -t 1 ]; then
     stdout_terminal=true
 else
@@ -39,9 +39,9 @@ handle_option() {
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             path_lookup=true
             ;;
-        v|version)
-            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
-            section=version
+        lang)
+            [ $# = 2 ] || fatal 64 "expected value for option $1"
+            user_lang="$2"
             ;;
         s|short)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
@@ -62,9 +62,9 @@ handle_option() {
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             wrap=false
             ;;
-        locale)
-            [ $# = 2 ] || fatal 64 "expected value for option $1"
-            user_lang_country="$2"
+        v|version)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            section=version
             ;;
         *)
             fatal 64 "unknown option: $1"
@@ -105,75 +105,54 @@ if [ $# -eq 0 ]; then
     else
         fatal 64 'expected arguments: NAME'
     fi
-else
-    for x; do
-        if [ '' = "$x" ]; then
-            fatal 64 'unexpected empty argument'
-        fi
-    done
 fi
 
-if [ -z "$user_lang_country" ]; then
-    user_lang_country="${LC_ALL:-${LC_CTYPE:-${LANG:-en}}}"
-fi
-user_lang_country="$(printf %s "$user_lang_country" | sed -r 's/^(..)(_..)?.*/\1\2/' | tr A-Z a-z)"
-case "$user_lang_country" in
-    [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
-        user_lang="$user_lang_country"
-        user_lang_country=
-        ;;
-    [abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz])
-        user_lang="${user_lang_country%_*}"
-        ;;
-    *)
-        user_lang_country=
-        user_lang=en
-        ;;
-esac
-
-main() {
-    local command file
-    command="$1"
-    file="$1"
+helpfile_locate() {
+    set -- -- "$@"
+    if [ version == "$section" ]; then
+        set -- --version "$@"
+    fi
     if $path_lookup; then
-        case "$1" in
-            */*) ;;
-            *)
-                file="$(which "$1" 2>/dev/null)" || fatal 69 "not found in PATH: $1"
-                ;;
-        esac
+        set -- --command "$@"
     fi
-    shift
-    if show_helpfile "$section" "$file" "$@"; then
+    "$(dirname "$base_prog")/locate" --lang="$user_lang" "$@"
+}
+main() {
+    local target type section
+    target="$(helpfile_locate "$@")" || exit
+    type="${target%% *}"
+    target="${target#* }"
+    if [ file = "$type" ]; then
+        output_text <"$target"
         return 0
-    elif inline_section "$section" "$file" "$@"; then
-        return 0
-    elif [ $path_lookup = true -a help = "$section" -a $# = 0 -a $? = 2 ]; then
-        case "$command" in
-            */*) ;;
-            *) exec man 1 "$command" ;;
-        esac
     fi
-    set -- "$file" "$@"
-    fatal 69 "$section not found: $*"
+    section="${target%% *}"
+    target="${target#* }"
+    case "$type" in
+        man)
+            exec man "$section" "$target"
+            ;;
+        internal)
+            show_internal_section "$section" "$target" || fatal 70 'unable to read internal section'
+            return 0
+            ;;
+        *)
+            fatal 70 'unknown type'
+            ;;
+    esac
 }
 
-inline_section() { # SECTION FILE [SUBTOPIC..]
-    # Return 2 if inline section not found.
-    if [ $# != 2 -o ! -f "$2" ]; then
-        return 2
-    fi
-    inline_section_read "$1" <"$2"
+show_internal_section() { # SECTION FILE
+    sed -r 's/ +$//' "$2" | internal_section_read "$1"
 }
-inline_section_read() { # SECTION <lines
+internal_section_read() { # SECTION <lines
     local line
     while :; do
-        line="$(readline)" || return 2
+        read -r line || return 2
         case "$line" in
-            "#.$1"|"#.$1 "*)
-                # line="$(printf %s "$line" | sed -r 's/^[^ ]+ *//; s/ +$//')"
-                inline_extract_section_text | output_text
-                return
+            "#.$1")
+                internal_extract_section_text | output_text
+                return 0
                 ;;
             '#'*)
                 ;;
@@ -184,17 +163,11 @@ inline_section_read() { # SECTION <lines
     done
 }
 
-readline() {
-    local line
-    read -r line || return 1
-    printf %s "$line" | sed -r 's/ +$//'
-}
-
-inline_extract_section_text() { # <lines
+internal_extract_section_text() { # <lines
     # Read lines from stdin until end of section; write to stdout.
     local line
     while :; do
-        line="$(readline)" || return 0
+        read -r line || return 0
         case "$line" in
             '##'*)
                 ;;
@@ -211,68 +184,17 @@ inline_extract_section_text() { # <lines
     done
 }
 
-show_helpfile() { # SECTION FILE [SUBTOPIC..]
-    local section file subtopic dirname target link
-    section="$1"
-    file="$2"
-    shift 2
-    if [ $# = 0 ]; then
-        subtopic=
-    else
-        subtopic="$(printf /%s "$@")"
-    fi
-    while :; do
-        dirname="$(dirname "$file")"
-        if target="$(locale_helpfile "$dirname/help/$(basename "$file")$subtopic.$section")"; then
-            sed -r '/^#/d' "$target" | output_text
-            return $?
-        fi
-        if [ -L "$file" ]; then
-            link="$(readlink "$file")"
-            case "$link" in
-                /*)
-                    file="$link"
-                    ;;
-                *)
-                    file="$dirname/$link"
-                    ;;
-            esac
-        else
-            return 1
-        fi
-    done
-}
-
-locale_helpfile() { # BASE
-    local locale target
-    for locale in $user_lang_country $user_lang; do
-        target="$1.$locale.txt"
-        if [ -e "$target" ]; then
-            printf %s "$target"
-            return 0
-        fi
-    done
-    for target in "$1.$user_lang"_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
-        if [ -e "$target" ]; then
-            printf %s "$target"
-            return 0
-        fi
-    done
-    for target in "$1.en.txt" "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
-        if [ -e "$target" ]; then
-            printf %s "$target"
-            return 0
-        fi
-    done
-    return 1
-}
-
 if $short_output; then
     output_text() {
-        sed -n '/^$/q; p' | output_text_full
+        sed -r '/^#/d' | \
+            sed -n '/^$/q; p' | \
+            output_text_full
     }
 else
-    output_text() output_text_full
+    output_text() {
+        sed -r '/^#/d' | \
+            output_text_full
+    }
 fi
 output_text_full() {
     if ! $wrap; then
