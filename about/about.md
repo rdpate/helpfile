@@ -122,18 +122,18 @@ Manpages should contain more depth than help text and should be preferred when a
 Text Format
 -----------
 
-The text format is mostly "plain".  Any line starting with "#" is a comment and will be ignored.  This list of requirements must be followed (and should be rewritten):
+The text format is "plain" and denoted with "txt" file extension.  Any line starting with "#" (no indentation allowed) is a comment and will be ignored.  This list of requirements must be followed:
 
 - text MUST be encoded in UTF-8 without a byte-order mark
 - text SHOULD be encoded in ASCII if convenient
 - text MUST NOT be hard-wrapped, it will be wrapped according to the user's preferences and current display (which may not be a terminal)
 - text MUST NOT contain markup not intended to be directly read by a person
 - text MUST NOT have leading blank lines
-- text SHOULD NOT have trailing blank lines
-- text lines MUST end with a newline, including the last line
+- text SHOULD NOT have trailing blank lines (including after comment lines are deleted)
+- lines MUST end with a newline (including the last line)
 - text MUST NOT contain control characters (besides newline), including carriage return and tab
 - for help sections, a synopsis MUST be at the top followed by a blank line if text follows
-- for help sections on commands, the synopsis MUST include the command name and common forms, eg. "command FOO [BAR..]"
+- for help sections on commands, the synopsis MUST include a command name and common forms, eg. "command FOO [BAR..]"
 - for version sections, the version string MUST be the first line followed by a blank line if text follows
     - the version string SHOULD be formatted according to semver.org
     - whether version strings may be compared according to semver.org is OPTIONAL
@@ -164,3 +164,8 @@ Future Ideas
     - "#.help /SUBTOPIC.LANG.FORMAT"?
     - "#/SUBTOPIC.help.LANG.FORMAT"?
     - inline sections are exactly equivalent to the contents of a separate section with specific line munging for comments (prefixing "#" for comments and blank lines or "# " otherwise)
+- fixed-width option (--file?) to show a given helpfile without locate
+    - could refactor fixed-width into three programs
+        - extract internal section text
+        - format helpfile text for fixed-width
+        - glue for these and ./locate (ie. current version)

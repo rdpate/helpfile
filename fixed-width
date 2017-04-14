@@ -143,10 +143,8 @@ main() {
 }
 
 show_internal_section() { # SECTION FILE
-    sed -r 's/ +$//' "$2" | internal_section_read "$1"
-}
-internal_section_read() { # SECTION <lines
     local line
+    sed -r 's/ +$//' "$2" | \
     while :; do
         read -r line || return 2
         case "$line" in
@@ -162,8 +160,7 @@ internal_section_read() { # SECTION <lines
         esac
     done
 }
-
-internal_extract_section_text() { # <lines
+internal_section_extract_text() { # <lines
     # Read lines from stdin until end of section; write to stdout.
     local line
     while :; do
