@@ -21,7 +21,8 @@ fatal() {
     exit "$1"
 }
 
-path_lookup=false
+locate_command=
+locate_section=
 section=help
 short_output=false
 wrap=true
@@ -37,7 +38,7 @@ handle_option() {
     case "$1" in
         c|command)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
-            path_lookup=true
+            locate_command=--command
             ;;
         lang)
             [ $# = 2 ] || fatal 64 "expected value for option $1"
@@ -65,6 +66,7 @@ handle_option() {
         v|version)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             section=version
+            locate_section=--version
             ;;
         *)
             fatal 64 "unknown option: $1"
@@ -107,19 +109,16 @@ if [ $# -eq 0 ]; then
     fi
 fi
 
-helpfile_locate() {
-    set -- -- "$@"
-    if [ version == "$section" ]; then
-        set -- --version "$@"
-    fi
-    if $path_lookup; then
-        set -- --command "$@"
-    fi
-    "$(dirname "$base_prog")/locate" --lang="$user_lang" "$@"
+helpfile_locate() { # NAME [SUBTOPIC..]
+    "$(dirname "$base_prog")/locate" \
+        --lang="$user_lang" \
+        $locate_command \
+        $locate_section \
+        -- "$@"
 }
 main() {
     local target type section
-    target="$(helpfile_locate "$@")" || exit
+    target="$(helpfile_locate "$@")" || exit $?
     type="${target%% *}"
     target="${target#* }"
     if [ file = "$type" ]; then
