@@ -148,7 +148,7 @@ show_internal_section() { # SECTION FILE
         read -r line || return 2
         case "$line" in
             "#.$1")
-                internal_extract_section_text | output_text
+                internal_section_extract_text | output_text
                 return 0
                 ;;
             '#'*)
