@@ -80,11 +80,15 @@ if [ $# -eq 0 ]; then
     fatal 64 'expected arguments: NAME'
 else
     check_args() {
+        local x
+        if [ '' = "$1" ]; then
+            fatal 64 'invalid empty NAME'
+        fi
         shift
         for x; do
             case "$x" in
                 '')
-                    fatal 64 'unexpected empty argument'
+                    fatal 64 'invalid SUBTOPIC: unexpected empty argument'
                     ;;
                 .*)
                     fatal 64 'invalid SUBTOPIC: leading period'
