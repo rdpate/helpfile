@@ -88,11 +88,13 @@ else
         for x; do
             case "$x" in
                 '')
-                    fatal 64 'invalid SUBTOPIC: unexpected empty argument'
+                    fatal 64 'invalid SUBTOPIC: empty argument'
                     ;;
-                .*)
+                .*|*/.*)
                     fatal 64 'invalid SUBTOPIC: leading period'
                     ;;
+                /)
+                    fatal 64 'invalid SUBTOPIC: bad name'
             esac
         done
     }
@@ -185,7 +187,7 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
     if [ $# = 0 ]; then
         subtopic=
     else
-        subtopic="$(printf /%s "$@")"
+        subtopic="$(printf /%s "$@" | sed -r 's,//+,/,g; s,/+$,,')"
     fi
     left=/
     right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
