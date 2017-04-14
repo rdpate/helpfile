@@ -79,16 +79,20 @@ done
 if [ $# -eq 0 ]; then
     fatal 64 'expected arguments: NAME'
 else
-    for x; do
-        case "$x" in
-            '')
-                fatal 64 'unexpected empty argument'
-                ;;
-            .*)
-                fatal 64 'invalid SUBTOPIC: leading period'
-                ;;
-        esac
-    done
+    check_args() {
+        shift
+        for x; do
+            case "$x" in
+                '')
+                    fatal 64 'unexpected empty argument'
+                    ;;
+                .*)
+                    fatal 64 'invalid SUBTOPIC: leading period'
+                    ;;
+            esac
+        done
+    }
+    check_args "$@"
 fi
 
 check_user_lang_country() {
@@ -178,11 +182,6 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
         subtopic=
     else
         subtopic="$(printf /%s "$@")"
-        case "$subtopic" in
-            */.*)
-                fatal 69 'invalid subtopic (leading period)'
-                ;;
-        esac
     fi
     left=/
     right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
