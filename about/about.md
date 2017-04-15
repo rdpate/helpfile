@@ -133,7 +133,8 @@ The text format is "plain" and denoted with "txt" file extension.  Any line star
 - lines MUST end with a newline (including the last line)
 - text MUST NOT contain control characters (besides newline), including carriage return and tab
 - for help sections, a synopsis MUST be at the top followed by a blank line if text follows
-- for help sections on commands, the synopsis MUST include a command name and common forms, eg. "command FOO [BAR..]"
+- for help sections on commands, the synopsis MUST be one or more lines showing usage, eg. "command FOO [BAR..]"
+    - ideally, only one line is listed; otherwise the first line SHOULD be the most common usage
 - for version sections, the version string MUST be the first line followed by a blank line if text follows
     - the version string SHOULD be formatted according to semver.org
     - whether version strings may be compared according to semver.org is OPTIONAL
@@ -150,7 +151,7 @@ Future Ideas
     - non-commands?
     - what alternative synopsis will always make sense?
 - separate command to list subtopics?
-- will not support dynamic subtopics, where code must be executed to determine the final command (eg. hg and git aliases in .hgrc and .git/config)
+- will not support dynamic subtopics, where code must be executed to determine the final command (eg. as with hg and git aliases in .hgrc and .git/config)
 - more formats than plain text
     - desirable: links, anchors, italic, bold, underline
     - maybe Markdown
@@ -169,3 +170,5 @@ Future Ideas
         - extract internal section text
         - format helpfile text for fixed-width
         - glue for these and ./locate (ie. current version)
+- find(1)-like utility that lists all help files starting from a given directory; also lists subtopics for a given filename
+    - first line of synopsis will be treated as the "title"
