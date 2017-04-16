@@ -180,7 +180,7 @@ main() {
 }
 
 find_helpfile() { # SECTION FILE [SUBTOPIC..]
-    local section file subtopic left right link
+    local section file subtopic left right dir link
     section="$1"
     file="$2"
     shift 2
@@ -189,28 +189,45 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
     else
         subtopic="$(printf /%s "$@" | sed -r 's,//+,/,g; s,/+$,,')"
     fi
-    left=/
+    left=
     right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
-    case "$right" in */..*)
-        fatal 69 'basename with two leading periods'
-        ;;
+    case "$right" in
+        */..*)
+            fatal 69 'basename with two leading periods'
+            ;;
+        */.)
+            right="${right%/.}"
+            ;;
     esac
-    orig_right="${right#/}"
+    orig_right="$right"
     right="$(printf %s "$right" | sed -r 's,/\.,/,g')"
-    right="${right#/}"
     while :; do
-        if find_helpfile_lang "${left}help/$right$subtopic.$section"; then
-            if ! $show_all; then
-                return 0
+        dir="$left/help$right$subtopic"
+        if [ -d "$dir" ]; then
+            if find_helpfile_lang "$dir/$section"; then
+                if ! $show_all; then
+                    return 0
+                fi
             fi
         fi
 
-        case "$right" in */*)
-            left="$left${orig_right%%/*}/"
-            orig_right="${orig_right#*/}"
-            right="${right#*/}"
-            continue
-            ;;
+        case "$right" in
+            /*/*)
+                orig_right="${orig_right#/}"
+                right="${right#/}"
+                left="$left/${orig_right%%/*}"
+                orig_right="/${orig_right#*/}"
+                right="/${right#*/}"
+                continue
+                ;;
+            '')
+                ;;
+            *)
+                left="$left$orig_right"
+                orig_right=
+                right=
+                continue
+                ;;
         esac
         if [ -L "$file" ]; then
             link="$(readlink "$file")"
@@ -224,9 +241,13 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
             esac
             left=/
             right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
-            case "$right" in */..*)
-                fatal 69 'basename with two leading periods'
-                ;;
+            case "$right" in
+                */..*)
+                    fatal 69 'basename with two leading periods'
+                    ;;
+                */.)
+                    right="${right%/.}"
+                    ;;
             esac
             orig_right="${right#/}"
             right="$(printf %s "$right" | sed -r 's,/\.,/,g')"
