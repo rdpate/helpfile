@@ -172,3 +172,5 @@ Future Ideas
         - glue for these and ./locate (ie. current version)
 - find(1)-like utility that lists all help files starting from a given directory; also lists subtopics for a given filename
     - first line of synopsis will be treated as the "title"
+- provide a way to specify help files for a directory within that directory
+    - ie. help for "/a/b" never considers "/a/b/help/..."
