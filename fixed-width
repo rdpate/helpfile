@@ -102,11 +102,7 @@ done
 
 
 if [ $# -eq 0 ]; then
-    if [ help = "$section" ]; then
-        set -- "$0"
-    else
-        fatal 64 'expected arguments: NAME'
-    fi
+    fatal 64 'expected arguments: NAME [SUBTOPIC..]'
 fi
 
 helpfile_locate() { # NAME [SUBTOPIC..]

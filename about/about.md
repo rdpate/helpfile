@@ -1,12 +1,12 @@
 Help
 ====
 
-Help displays an overview of purpose, options, version, and other closely related information.  For executables, Help replaces the "options" of --help and --version and does not require executing files which may be non-functional or untrusted.
+Help displays an overview of purpose, options, version, and other closely related information.  For executables, Help replaces the "options" of --help and --version without executing files which may be missing, non-functional, or untrusted.
 
 Commands
 --------
 
-This implementation provides a locate program to find help files and a fixed-width program to display them.  See their respective help files for details.  To use as commands, symlink fixed-width as "help" somewhere in your $PATH, and symlink locate as "help-locate" if desired.
+This implementation provides a locate program to find help files and a fixed-width program to display them.  See their respective help files for details.  To use as commands, you could symlink fixed-width as "help" somewhere in your $PATH, and symlink locate as "help-locate" if desired.
 
 
 Help Sections
@@ -107,7 +107,7 @@ Example target paths with possible help text paths:
 Comparison to Manpages
 ----------------------
 
-Manpages should contain more depth than help text and should be preferred when an overview is insufficient.  This implementation defaults to "man 1 COMMAND" when used no help file is found and -c is specified.  However, help text is easier to specify, better fulfills its role, does not require installation into a global path, and isn't closely tied to terminal capabilities or restrictions.
+Manpages will be preferred (as the accepted standard), but could be generated from help sections.  This implementation defaults to "man 1 COMMAND" when used no help file is found and -c is specified.  (Help could be installed into $PATH as a wrapper which always uses -c).  However, help text is easier to specify, better fulfills its role, does not require installation into a global path, and isn't closely tied to terminal capabilities or restrictions.
 
 
 Text Format
