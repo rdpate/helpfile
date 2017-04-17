@@ -239,7 +239,7 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
                     file="$(dirname "$file")/$link"
                     ;;
             esac
-            left=/
+            left=
             right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
             case "$right" in
                 */..*)
@@ -249,9 +249,8 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
                     right="${right%/.}"
                     ;;
             esac
-            orig_right="${right#/}"
+            orig_right="$right"
             right="$(printf %s "$right" | sed -r 's,/\.,/,g')"
-            right="${right#/}"
         else
             if [ -n "$first_lang_file" ]; then
                 printf 'file %s\n' "$first_lang_file"
