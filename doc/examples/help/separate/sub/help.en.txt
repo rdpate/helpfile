@@ -1,3 +1,0 @@
-examples/separate sub
-
-Help text in separate file for subtopic "sub".

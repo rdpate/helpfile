@@ -1,4 +1,4 @@
-examples/separate
+help in separate files
 
-Help text in separate file.
+While inline sections are convenient to promote using help early and often, once a threshold of complexity or versatility is exceeded, separate files must be used.  This threshold varies based on factors such as the particular file being documented, the project to which it belongs, whether the information is generated from another source, and localization.
 # comment

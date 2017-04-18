@@ -1,1 +1,3 @@
-help file examples
+examples
+
+Within these examples, reference to a "help" command means "fixed-width" in this project.

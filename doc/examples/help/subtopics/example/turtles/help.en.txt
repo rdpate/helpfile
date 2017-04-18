@@ -1,3 +1,1 @@
-subtopics examples turtles
-
-It's turtles all the way down!  Use nested subtopics as needed, but not too much.
+use nested subtopics as needed, but not too much
