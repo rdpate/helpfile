@@ -14,17 +14,20 @@
 # -a  --all         list all matches instead of first
 #
 # -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
+#
+#     --debug-locations     show locations on stderr while searching
 
 fatal() {
     printf %s\\n "$(readlink -f "$0") error: $2" >&2
     exit "$1"
 }
 
-show_all=false
-path_lookup=false
 section=help
 user_lang_country=
 first_lang_file=
+show_all=false
+path_lookup=false
+debug_locations=false
 handle_option() {
     case "$1" in
         a|all)
@@ -34,6 +37,10 @@ handle_option() {
         c|command)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             path_lookup=true
+            ;;
+        debug-locations)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            debug_locations=true
             ;;
         lang)
             [ $# = 2 ] || fatal 64 "expected value for option $1"
@@ -203,6 +210,9 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
     right="$(printf %s "$right" | sed -r 's,/\.,/,g')"
     while :; do
         dir="$left/help$right$subtopic"
+        if $debug_locations; then
+            printf 'trying file %s.LANG.FORMAT\n' "$dir/$section" >&2
+        fi
         if [ -d "$dir" ]; then
             if find_helpfile_lang "$dir/$section"; then
                 if ! $show_all; then
@@ -293,6 +303,9 @@ find_internal_section() { # SECTION FILE [SUBTOPIC..]
     # Return 2 if internal section not found.
     if [ $# != 2 -o ! -f "$2" ]; then
         return 2
+    fi
+    if $debug_locations; then
+        printf 'trying internal sections in %s\n' "$2" >&2
     fi
     if sed -r 's/ +$//' "$2" | find_internal_section_read "$1"; then
         printf 'internal %s %s\n' "$1" "$2"

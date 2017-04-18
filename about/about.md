@@ -43,6 +43,8 @@ If a matching help file is still not found and the target file is a symlink, it 
 
 The first (outside-in) candidate with any language is saved and used if the search is finally exhausted.  If a help file is still not found, internal sections are searched (see Internal Help Sections).
 
+Use --debug-locations to see the locations searched.
+
 
 Subtopics
 ---------

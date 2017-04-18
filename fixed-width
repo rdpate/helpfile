@@ -14,6 +14,8 @@
 # -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
 #     --wrap=N      wrap lines to N width or 0 for no wrap
 #     --no-wrap     --wrap=0
+#
+#     --debug-locations     show locations on stderr while searching
 
 base_prog="$(readlink -f "$0")"
 fatal() {
@@ -21,9 +23,7 @@ fatal() {
     exit "$1"
 }
 
-locate_command=
-locate_section=
-section=help
+locate_flags=
 short_output=false
 wrap=true
 min_width=20
@@ -38,7 +38,11 @@ handle_option() {
     case "$1" in
         c|command)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
-            locate_command=--command
+            locate_flags="$locate_flags --command"
+            ;;
+        debug-locations)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            locate_flags="$locate_flags --debug-locations"
             ;;
         lang)
             [ $# = 2 ] || fatal 64 "expected value for option $1"
@@ -65,8 +69,7 @@ handle_option() {
             ;;
         v|version)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
-            section=version
-            locate_section=--version
+            locate_flags="$locate_flags --version"
             ;;
         *)
             fatal 64 "unknown option: $1"
@@ -108,8 +111,7 @@ fi
 helpfile_locate() { # NAME [SUBTOPIC..]
     "$(dirname "$base_prog")/locate" \
         --lang="$user_lang" \
-        $locate_command \
-        $locate_section \
+        $locate_flags \
         -- "$@"
 }
 main() {
