@@ -278,21 +278,25 @@ find_helpfile_lang() { # BASE
             target="$1.$lang.txt"
             if [ -e "$target" ]; then
                 printf 'file %s\n' "$target"
-                return 0
+                if ! $show_all; then
+                    return 0
+                fi
             fi
         done
-        if [ -z "$first_lang_file" ]; then
-            for target in "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
+        if [ false = $show_all -a -z "$first_lang_file" ]; then
+            for target in "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?*; do
                 if [ -e "$target" ]; then
                     first_lang_file="$target"
                 fi
             done
         fi
     else
-        for target in "$1.any.txt" "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].txt; do
+        for target in "$1.any".?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?*; do
             if [ -e "$target" ]; then
                 printf 'file %s\n' "$target"
-                return 0
+                if ! $show_all; then
+                    return 0
+                fi
             fi
         done
     fi
