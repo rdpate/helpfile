@@ -6,7 +6,7 @@ Help displays an overview of purpose, options, version, and other closely relate
 Commands
 --------
 
-This implementation provides a locate program to find help files and a fixed-width program to display them.  See their respective help files for details.  To use as commands, you could symlink fixed-width as "help" somewhere in your $PATH, and symlink locate as "help-locate" if desired.
+This implementation provides a locate program to find help files and a helpcmd program to display them.  See their respective help files for details.  To use as commands, you could symlink helpcmd as "help" somewhere in your $PATH.  If desired, symlink locate as "help-locate".
 
 Once help is in your $PATH, cd into doc/examples and run "help .".
 
@@ -161,10 +161,5 @@ Future Ideas
     - "#.help /SUBTOPIC.LANG.FORMAT"?
     - "#/SUBTOPIC.help.LANG.FORMAT"?
     - inline sections are exactly equivalent to the contents of a separate section with specific line munging for comments (prefixing "#" for comments and blank lines or "# " otherwise)
-- fixed-width option (--file?) to show a given helpfile without locate
-    - could refactor fixed-width into three programs
-        - extract internal section text
-        - format helpfile text for fixed-width
-        - glue for these and ./locate (ie. current version)
 - find(1)-like utility that lists all help files starting from a given directory; also lists subtopics for a given filename
     - first line of synopsis will be treated as the "title"

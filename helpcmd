@@ -2,7 +2,7 @@
 #.version
 # 0.0.0
 #.help
-# %helpfile/fixed-width NAME [SUBTOPIC..]
+# %helpfile/helpcmd NAME [SUBTOPIC..]
 #
 # Show NAME's help overview or SUBTOPIC help.  Output is suitable for fixed-width display.
 #
