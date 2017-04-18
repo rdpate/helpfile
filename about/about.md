@@ -8,6 +8,8 @@ Commands
 
 This implementation provides a locate program to find help files and a fixed-width program to display them.  See their respective help files for details.  To use as commands, you could symlink fixed-width as "help" somewhere in your $PATH, and symlink locate as "help-locate" if desired.
 
+Once help is in your $PATH, cd into doc/examples and run "help .".
+
 
 Help Sections
 -------------

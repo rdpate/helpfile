@@ -1,0 +1,3 @@
+directories can have help text, just like any other file
+
+After "help subtopics", compare "help dir/file" and "help dir file".
