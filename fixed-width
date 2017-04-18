@@ -115,12 +115,20 @@ helpfile_locate() { # NAME [SUBTOPIC..]
         -- "$@"
 }
 main() {
-    local target type section
+    local target type format section
     target="$(helpfile_locate "$@")" || exit $?
     type="${target%% *}"
     target="${target#* }"
     if [ file = "$type" ]; then
-        output_text <"$target"
+        format="${target#*.*.}"
+        case "$format" in
+            txt)
+                output_text <"$target"
+                ;;
+            *)
+                fatal 69 "unknown file format: $target"
+                ;;
+        esac
         return 0
     fi
     section="${target%% *}"
@@ -134,7 +142,7 @@ main() {
             return 0
             ;;
         *)
-            fatal 70 'unknown type'
+            fatal 70 "unknown help type: $type $section $target"
             ;;
     esac
 }
