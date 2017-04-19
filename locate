@@ -11,6 +11,7 @@
 # Options:
 # -v  --version     version instead of help
 #     --lang=L      use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+#     --format=F    preferred formats, comma separated
 # -a  --all         list all matches instead of first
 #
 # -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
@@ -25,10 +26,12 @@ fatal() {
 section=help
 user_lang_country=
 first_lang_file=
+pref_formats=
 show_all=false
 path_lookup=false
 debug_locations=false
 handle_option() {
+    local x
     case "$1" in
         a|all)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
@@ -41,6 +44,14 @@ handle_option() {
         debug-locations)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             debug_locations=true
+            ;;
+        format)
+            [ $# = 2 ] || fatal 64 "expected value for option $1"
+            x="$(printf %s "$2" | tr -d -c A-Za-z.,)"
+            if [ x"$x" != x"$2" ]; then
+                fatal 64 'invalid --format value'
+            fi
+            pref_formats="$(printf %s "$2" | tr , ' ')"
             ;;
         lang)
             [ $# = 2 ] || fatal 64 "expected value for option $1"
@@ -214,7 +225,7 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
             printf 'trying file %s.LANG.FORMAT\n' "$dir/$section" >&2
         fi
         if [ -d "$dir" ]; then
-            if find_helpfile_lang "$dir/$section"; then
+            if find_helpfile_lang_format "$dir/$section"; then
                 if ! $show_all; then
                     return 0
                 fi
@@ -271,24 +282,44 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
     done
 }
 
-find_helpfile_lang() { # BASE
-    local lang target
+find_helpfile_lang_format() { # BASE
+    local lang target format
     if [ -n "$user_lang" ]; then
-        for lang in $user_lang_country $user_lang any; do
-            target="$1.$lang.txt"
-            if [ -e "$target" ]; then
-                printf 'file %s\n' "$target"
-                if ! $show_all; then
-                    return 0
-                fi
-            fi
-        done
-        if [ false = $show_all -a -z "$first_lang_file" ]; then
-            for target in "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?*; do
-                if [ -e "$target" ]; then
-                    first_lang_file="$target"
-                fi
+        if $show_all; then
+            for lang in $user_lang_country $user_lang any; do
+                for target in "$1.$lang."?*; do
+                    if [ -e "$target" ]; then
+                        printf 'file %s\n' "$target"
+                    fi
+                done
             done
+        else
+            for format in $pref_formats; do
+                for lang in $user_lang_country $user_lang any; do
+                    target="$1.$lang.$format"
+                    if [ -e "$target" ]; then
+                        printf 'file %s\n' "$target"
+                        return 0
+                    fi
+                done
+            done
+            for lang in $user_lang_country $user_lang any; do
+                for target in "$1.$lang."?*; do
+                    if [ -e "$target" ]; then
+                        printf 'file %s\n' "$target"
+                        return 0
+                    fi
+                done
+            done
+            if [ -z "$first_lang_file" ]; then
+                for target in "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?*; do
+                    if [ -e "$target" ]; then
+                        first_lang_file="$target"
+                        return 1
+                    fi
+                done
+            fi
+            return 1
         fi
     else
         for target in "$1.any".?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?*; do
@@ -299,8 +330,8 @@ find_helpfile_lang() { # BASE
                 fi
             fi
         done
+        return 1
     fi
-    return 1
 }
 
 find_internal_section() { # SECTION FILE [SUBTOPIC..]

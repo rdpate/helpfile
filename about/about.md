@@ -6,9 +6,17 @@ Help displays an overview of purpose, options, version, and other closely relate
 Commands
 --------
 
-This implementation provides a locate program to find help files and a helpcmd program to display them.  See their respective help files for details.  To use as commands, you could symlink helpcmd as "help" somewhere in your $PATH.  If desired, symlink locate as "help-locate".
+### helpcmd
 
-Once help is in your $PATH, cd into doc/examples and run "help .".
+Locate and display help files, with some options for fixed-width display.  Symlink into $PATH as "help", cd doc/examples, and run "help .".
+
+### locate
+
+Locate help files for an given name/subtopic.  If desired, symlink into $PATH as "help-locate".
+
+### find
+
+Find all help files (with subtopics) from a given base.  If desired, symlink into $PATH as "help-find".
 
 
 Help Sections
@@ -66,7 +74,9 @@ Section Languages
 
 The desired language is given by --lang or the first acceptable value from $LC\_ALL, $LC\_CTYPE, or $LANG.  This value is converted to lowercase and must match "language\[\_country\]\[.\*\]", where language is two ASCII letters and country, if present, is also two ASCII letters.
 
-Candidate directories are searched to find the first file matching language\_country, language, or "any".  If --lang is empty or not specified and an acceptable value cannot be found from the environment or if --lang=none, this changes to find the first file matching "any" or, in an unspecified order, any language with or without country.
+Candidate directories are searched to find the first file matching language\_country, language, or "any" with a known format.  If --lang is empty or not specified and an acceptable value cannot be found from the environment or if --lang=none, this changes to find the first file matching "any" or, in an unspecified order, any language with or without country, also with a known format.
+
+In either case, if a known format is not found but a matching language exists with an unknown format, that file is selected -- when it cannot be displayed, an error is given.  This prevents a file in an unsupported format from being hidden.
 
 
 Internal Sections
@@ -160,5 +170,3 @@ Future Ideas
     - "#.help /SUBTOPIC.LANG.FORMAT"?
     - "#/SUBTOPIC.help.LANG.FORMAT"?
     - inline sections are exactly equivalent to the contents of a separate section with specific line munging for comments (prefixing "#" for comments and blank lines or "# " otherwise)
-- find(1)-like utility that lists all help files starting from a given directory; also lists subtopics for a given filename
-    - first line of synopsis will be treated as the "title"

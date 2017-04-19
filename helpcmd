@@ -110,6 +110,7 @@ fi
 
 helpfile_locate() { # NAME [SUBTOPIC..]
     "$(dirname "$base_prog")/locate" \
+        --format=txt \
         --lang="$user_lang" \
         $locate_flags \
         -- "$@"

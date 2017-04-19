@@ -1,0 +1,53 @@
+#!/bin/sh -ue
+#.version
+# 0.0.0
+#.help
+# %helpfile/find [BASE]
+#
+# Find help files (including subtopics) for files starting from BASE or the current directory.  The help files need not be a subdirectory of BASE.
+
+fatal() {
+    printf %s\\n "$(readlink -f "$0") error: $2" >&2
+    exit "$1"
+}
+
+handle_option() {
+    case "$1" in
+        *)
+            fatal 64 "unknown option: $1"
+            ;;
+    esac
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --)
+            shift
+            break;;
+        --*=*)
+            x="${1#--}"
+            handle_option "${x%%=*}" "${x#*=}"
+            shift;;
+        --*)
+            handle_option "${1#--}"
+            shift;;
+        -?*)
+            if [ ${#1} = 2 ]; then
+                handle_option "${1#-}"
+            else
+                v="${1#??}"
+                x="${1%"$v"}"
+                handle_option "${x#-}" "$v"
+            fi
+            shift;;
+        *)
+            break;;
+    esac
+done
+
+
+if [ $# -gt 1 ]; then
+    fatal 64 'unexpected arguments'
+fi
+set -- "$(readlink -f "${1:-.}")"
+fatal 70 TODO
