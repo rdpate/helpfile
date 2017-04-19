@@ -114,8 +114,10 @@ Comparison to Manpages
 Manpages will be preferred (as the accepted standard), but could be generated from help sections.  This implementation defaults to "man 1 COMMAND" when used no help file is found and -c is specified.  (Help could be installed into $PATH as a wrapper which always uses -c).  However, help text is easier to specify, better fulfills its role, does not require installation into a global path, and isn't closely tied to terminal capabilities or restrictions.
 
 
-Text Format
------------
+Formats
+-------
+
+### Text Format
 
 The text format is "plain" and denoted with "txt" file extension.  Any line starting with "#" (no indentation allowed) is a comment and will be ignored.  This list of requirements must be followed:
 
@@ -131,10 +133,7 @@ The text format is "plain" and denoted with "txt" file extension.  Any line star
 - for help sections on commands, the synopsis MUST be one or more lines showing usage, eg. "command FOO [BAR..]"
     - ideally, only one line is listed; otherwise the first line SHOULD be the most common usage
 - for version sections, the version string MUST be the first line followed by a blank line if text follows
-    - the version string SHOULD be formatted according to semver.org
-        - TODO: which version of semver.org?
-    - whether version strings may be compared according to semver.org is OPTIONAL
-    - if unknown or missing, the version string MUST NOT be blank and SHOULD be "unknown"
+    - if version string is unknown or missing but non-synopsis text is included, the version string MUST NOT be blank and SHOULD be "unknown"
 
 
 Future Ideas
