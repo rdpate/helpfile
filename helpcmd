@@ -1,6 +1,4 @@
 #!/bin/sh -ue
-#.version
-# 0.0.0
 #.help
 # %helpfile/helpcmd NAME [SUBTOPIC..]
 #
