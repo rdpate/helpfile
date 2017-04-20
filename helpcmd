@@ -50,6 +50,7 @@ handle_option() {
             ;;
         section)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
+            [ -n "$2" ] || fatal 64 "empty value for option $1"
             section="$2"
             ;;
         s|short)
