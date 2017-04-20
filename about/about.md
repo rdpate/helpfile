@@ -127,12 +127,13 @@ Manpages will be preferred (as the accepted standard), but could be generated fr
 Formats
 -------
 
+Format file extensions must only use the characters "-A-Za-z0-9.,\_".  Text format is the only format currently supported by this implementation, but hypothetical examples include "md" and "txt.gz".
+
 ### Text Format
 
 The text format is "plain" and denoted with "txt" file extension.  Any line starting with "#" (no indentation allowed) is a comment and will be ignored.  This list of requirements must be followed:
 
 - text MUST be encoded in UTF-8 without a byte-order mark
-- text SHOULD be encoded in ASCII if convenient
 - text MUST NOT be hard-wrapped, it will be wrapped according to the user's preferences and current display (which may not be a terminal)
 - text MUST NOT contain markup not intended to be directly read by a person
 - text MUST NOT have leading blank lines

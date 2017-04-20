@@ -47,7 +47,7 @@ handle_option() {
             ;;
         format)
             [ $# = 2 ] || fatal 64 "expected value for option $1"
-            x="$(printf %s "$2" | tr -d -c A-Za-z.,)"
+            x="$(printf %s "$2" | LC_ALL=C tr -d -c \\-A-Za-z0-9.,_)"
             if [ x"$x" != x"$2" ]; then
                 fatal 64 'invalid --format value'
             fi
