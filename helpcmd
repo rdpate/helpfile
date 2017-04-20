@@ -5,7 +5,7 @@
 # Show NAME's help overview or SUBTOPIC help.  Output is suitable for fixed-width display.
 #
 # Options:
-# -v  --version     version instead of help
+# -v  --version     version instead of help (--section=version)
 # -s  --short       help synopsis (or version string) only
 #     --lang=L      use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 #
@@ -13,6 +13,7 @@
 #     --wrap=N      wrap lines to N width or 0 for no wrap
 #     --no-wrap     --wrap=0
 #
+#     --section=S   show section S (default: help)
 #     --debug-locations     show locations on stderr while searching
 
 base_prog="$(readlink -f "$0")"
@@ -21,6 +22,7 @@ fatal() {
     exit "$1"
 }
 
+section=help
 locate_flags=
 short_output=false
 wrap=true
@@ -43,12 +45,20 @@ handle_option() {
             locate_flags="$locate_flags --debug-locations"
             ;;
         lang)
-            [ $# = 2 ] || fatal 64 "expected value for option $1"
+            [ $# = 2 ] || fatal 64 "missing value for option $1"
             user_lang="$2"
+            ;;
+        section)
+            [ $# = 2 ] || fatal 64 "missing value for option $1"
+            section="$2"
             ;;
         s|short)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             short_output=true
+            ;;
+        v|version)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            section=version
             ;;
         wrap)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
@@ -64,10 +74,6 @@ handle_option() {
         no-wrap)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             wrap=false
-            ;;
-        v|version)
-            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
-            locate_flags="$locate_flags --version"
             ;;
         *)
             fatal 64 "unknown option: $1"
@@ -109,6 +115,7 @@ fi
 helpfile_locate() { # NAME [SUBTOPIC..]
     "$(dirname "$base_prog")/locate" \
         --format=txt \
+        --section="$section" \
         --lang="$user_lang" \
         $locate_flags \
         -- "$@"

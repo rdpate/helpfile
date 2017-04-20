@@ -7,13 +7,14 @@
 # Output on success is "file FILENAME", "internal SECTION FILENAME", or "man SECTION NAME".
 #
 # Options:
-# -v  --version     version instead of help
+# -v  --version     version instead of help (--section=version)
 #     --lang=L      use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 #     --format=F    preferred formats, comma separated
 # -a  --all         list all matches instead of first
 #
 # -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
 #
+#     --section=S   locate section S (default: help)
 #     --debug-locations     show locations on stderr while searching
 
 fatal() {
@@ -22,6 +23,7 @@ fatal() {
 }
 
 section=help
+user_lang=
 user_lang_country=
 first_lang_file=
 pref_formats=
@@ -44,7 +46,7 @@ handle_option() {
             debug_locations=true
             ;;
         format)
-            [ $# = 2 ] || fatal 64 "expected value for option $1"
+            [ $# = 2 ] || fatal 64 "missing value for option $1"
             x="$(printf %s "$2" | LC_ALL=C tr -d -c \\-A-Za-z0-9.,_)"
             if [ x"$x" != x"$2" ]; then
                 fatal 64 'invalid --format value'
@@ -52,8 +54,13 @@ handle_option() {
             pref_formats="$(printf %s "$2" | tr , ' ')"
             ;;
         lang)
-            [ $# = 2 ] || fatal 64 "expected value for option $1"
+            [ $# = 2 ] || fatal 64 "missing value for option $1"
             user_lang_country="$2"
+            ;;
+        section)
+            [ $# = 2 ] || fatal 64 "missing value for option $1"
+            [ -n "$2" ] || fatal 64 "empty value for option $1"
+            section="$2"
             ;;
         v|version)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
