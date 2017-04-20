@@ -121,7 +121,7 @@ Example target paths with possible help text paths:
 Comparison to Manpages
 ----------------------
 
-Manpages will be preferred (as the accepted standard), but could be generated from help sections.  This implementation defaults to "man 1 COMMAND" when used no help file is found and -c is specified.  (Help could be installed into $PATH as a wrapper which always uses -c).  However, help text is easier to specify, better fulfills its role, does not require installation into a global path, and isn't closely tied to terminal capabilities or restrictions.
+Manpages will be preferred (as the accepted standard), but could be generated from help sections.  This implementation defaults to "man 1 COMMAND" when no help file is found, the given name does not contain slash, and --command is specified.  (Help could be installed into $PATH as a wrapper which always uses --command; see doc/examples/help-with-c).  However, help text is easier to specify, better fulfills its role, does not require installation into a global path, and isn't closely tied to terminal capabilities or restrictions.
 
 
 Formats

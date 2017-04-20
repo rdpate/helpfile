@@ -1,0 +1,8 @@
+#!/bin/sh -ue
+#.help
+# help NAME [SUBTOPIC..]
+#
+# Wrapper for helpcmd which always specifies --command.  Use "help ./X" instead of "help X" when "X" might be in $PATH.
+
+# You may symlink this file directly, or else copy it and change the line below with the explicit path to helpcmd.
+exec "$(dirname "$(readlink -f "$0")")/../../helpcmd" --command "$@"
