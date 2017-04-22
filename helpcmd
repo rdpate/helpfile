@@ -24,10 +24,8 @@ fatal() {
 
 section=help
 locate_flags=
-short_output=false
-wrap=true
-min_width=20
-max_width=75
+format_short=
+format_wrap=
 user_lang=
 if [ -t 1 ]; then
     stdout_terminal=true
@@ -55,7 +53,7 @@ handle_option() {
             ;;
         s|short)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
-            short_output=true
+            format_short=--short
             ;;
         v|version)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
@@ -64,17 +62,17 @@ handle_option() {
         wrap)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
             if [ 0 = "$2" ]; then
-                wrap=false
+                format_wrap=--wrap=0
             else
                 if [ x"$2" != x"$(printf %s "$2" | tr -c -d 0-9)" ]; then
                     fatal 64 "invalid numeric value for option $1"
                 fi
-                max_width="$2"
+                format_wrap="--wrap=$2"
             fi
             ;;
         no-wrap)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
-            wrap=false
+            format_wrap=--wrap=0
             ;;
         *)
             fatal 64 "unknown option: $1"
@@ -121,6 +119,9 @@ helpfile_locate() { # NAME [SUBTOPIC..]
         $locate_flags \
         -- "$@"
 }
+helpfile_format_txt() { # [FILE]
+    "$(dirname "$base_prog")/format-txt-fw" $format_short $format_wrap -- "$@"
+}
 main() {
     local target type format section
     target="$(helpfile_locate "$@")" || exit $?
@@ -130,7 +131,7 @@ main() {
         format="${target#*.*.}"
         case "$format" in
             txt)
-                output_text <"$target"
+                helpfile_format_txt "$target"
                 ;;
             *)
                 fatal 69 "unknown file format: $target"
@@ -161,7 +162,7 @@ show_internal_section() { # SECTION FILE
         read -r line || return 2
         case "$line" in
             "#.$1")
-                internal_section_extract_text | output_text
+                internal_section_extract_text | helpfile_format_txt
                 return 0
                 ;;
             '#'*)
@@ -191,46 +192,6 @@ internal_section_extract_text() { # <lines
                 ;;
         esac
     done
-}
-
-if $short_output; then
-    output_text() {
-        sed -r '/^#/d' | \
-            sed -n '/^$/q; p' | \
-            output_text_full
-    }
-else
-    output_text() {
-        sed -r '/^#/d' | \
-            output_text_full
-    }
-fi
-output_text_full() {
-    if ! $wrap; then
-        if $stdout_terminal; then
-            "${PAGER:-less}"
-        else
-            cat
-        fi
-        return
-    fi
-
-    if $stdout_terminal; then
-        width="$(tput cols)" || width="${COLUMNS:-80}"
-    else
-        width="${COLUMNS:-80}"
-    fi
-    if [ "$max_width" -le "$width" ]; then
-        width="$max_width"
-    elif [ "$min_width" -ge "$width" ]; then
-        width="$min_width"
-    fi
-
-    if $stdout_terminal; then
-        fold -s -w"$width" | sed -r 's/ +$//' | "${PAGER:-less}"
-    else
-        fold -s -w"$width" | sed -r 's/ +$//'
-    fi
 }
 
 main "$@"

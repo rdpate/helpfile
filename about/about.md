@@ -46,6 +46,10 @@ Locate help files for an given name/subtopic.
 
 Find help files from a given base.
 
+### format-txt-fw [FILE]
+
+Format FILE as txt (see Text Format) with options for fixed-width output.
+
 
 Locating Sections
 ----

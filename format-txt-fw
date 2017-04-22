@@ -1,0 +1,130 @@
+#!/bin/sh -ue
+#.help
+# %helpfile/format-txt-fw [FILE]
+#
+# Format FILE for fixed-width display.  Use stdin if FILE is "-" or missing.
+#
+# Options:
+# -s  --short       exit after synopsis
+#     --wrap=N      wrap lines to N width or 0 for no wrap
+#     --no-wrap     --wrap=0
+#
+# If output to a terminal, $PAGER or less is used.
+
+base_prog="$(readlink -f "$0")"
+fatal() {
+    printf %s\\n "$base_prog error: $2" >&2
+    exit "$1"
+}
+
+synopsis_only=false
+wrap=true
+min_width=20
+max_width=75
+if [ -t 1 ]; then
+    stdout_terminal=true
+else
+    stdout_terminal=false
+fi
+handle_option() {
+    case "$1" in
+        s|short)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            synopsis_only=true
+            ;;
+        wrap)
+            [ $# = 2 ] || fatal 64 "missing value for option $1"
+            if [ 0 = "$2" ]; then
+                wrap=false
+            else
+                if [ x"$2" != x"$(printf %s "$2" | tr -c -d 0-9)" ]; then
+                    fatal 64 "invalid numeric value for option $1"
+                fi
+                wrap=true
+                max_width="$2"
+            fi
+            ;;
+        no-wrap)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            wrap=false
+            ;;
+        *)
+            fatal 64 "unknown option: $1"
+            ;;
+    esac
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --)
+            shift
+            break;;
+        --*=*)
+            x="${1#--}"
+            handle_option "${x%%=*}" "${x#*=}"
+            shift;;
+        --*)
+            handle_option "${1#--}"
+            shift;;
+        -?*)
+            if [ ${#1} = 2 ]; then
+                handle_option "${1#-}"
+            else
+                v="${1#??}"
+                x="${1%"$v"}"
+                handle_option "${x#-}" "$v"
+            fi
+            shift;;
+        *)
+            break;;
+    esac
+done
+
+
+if $synopsis_only; then
+    output_text() {
+        sed -r '/^#/d' | \
+            sed -n '/^$/q; p' | \
+            output_text_full
+    }
+else
+    output_text() {
+        sed -r '/^#/d' | \
+            output_text_full
+    }
+fi
+output_text_full() {
+    if ! $wrap; then
+        if $stdout_terminal; then
+            "${PAGER:-less}"
+        else
+            cat
+        fi
+        return
+    fi
+
+    if $stdout_terminal; then
+        width="$(tput cols)" || width="${COLUMNS:-80}"
+    else
+        width="${COLUMNS:-80}"
+    fi
+    if [ "$max_width" -le "$width" ]; then
+        width="$max_width"
+    elif [ "$min_width" -ge "$width" ]; then
+        width="$min_width"
+    fi
+
+    if $stdout_terminal; then
+        fold -s -w"$width" | sed -r 's/ +$//' | "${PAGER:-less}"
+    else
+        fold -s -w"$width" | sed -r 's/ +$//'
+    fi
+}
+
+if [ $# -gt 1 ]; then
+    fatal 64 'expected arguments: [FILE]'
+fi
+if [ $# = 1 -a x"${1:-}" != x- ]; then
+    exec <"$1"
+fi
+output_text
