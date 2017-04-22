@@ -81,19 +81,8 @@ while [ $# -gt 0 ]; do
 done
 
 
-if $synopsis_only; then
-    output_text() {
-        sed -r '/^#/d' | \
-            sed -n '/^$/q; p' | \
-            output_text_full
-    }
-else
-    output_text() {
-        sed -r '/^#/d' | \
-            output_text_full
-    }
-fi
-output_text_full() {
+output_text() {
+    local width
     if ! $wrap; then
         if $stdout_terminal; then
             "${PAGER:-less}"
@@ -115,9 +104,9 @@ output_text_full() {
     fi
 
     if $stdout_terminal; then
-        fold -s -w"$width" | sed -r 's/ +$//' | "${PAGER:-less}"
+        fold -s -w"$width" | "${PAGER:-less}"
     else
-        fold -s -w"$width" | sed -r 's/ +$//'
+        fold -s -w"$width"
     fi
 }
 
@@ -127,4 +116,8 @@ fi
 if [ $# = 1 -a x"${1:-}" != x- ]; then
     exec <"$1"
 fi
-output_text
+if $synopsis_only; then
+    sed -r -n '/^#/d; s/ +$//; /^$/q; p' | output_text
+else
+    sed -r -n '/^#/d; s/ +$//; p' | cat -s | output_text
+fi
