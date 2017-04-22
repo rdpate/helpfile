@@ -8,8 +8,11 @@
 # -s  --short       exit after synopsis
 #     --wrap=N      wrap lines to N width or 0 for no wrap
 #     --no-wrap     --wrap=0
+#     --no-pager    never use a pager
 #
-# If output to a terminal, $PAGER or less is used.
+# If output to a terminal:
+# - wrap at terminal width if less than wrap option
+# - use $PAGER (or less)
 
 base_prog="$(readlink -f "$0")"
 fatal() {
@@ -17,10 +20,11 @@ fatal() {
     exit "$1"
 }
 
+pager="${PAGER:-less}"
 synopsis_only=false
 wrap=true
 min_width=20
-max_width=75
+max_width=80
 if [ -t 1 ]; then
     stdout_terminal=true
 else
@@ -28,6 +32,10 @@ else
 fi
 handle_option() {
     case "$1" in
+        no-pager)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            pager=cat
+            ;;
         s|short)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             synopsis_only=true
@@ -85,7 +93,7 @@ output_text() {
     local width
     if ! $wrap; then
         if $stdout_terminal; then
-            "${PAGER:-less}"
+            "$pager"
         else
             cat
         fi
@@ -103,8 +111,8 @@ output_text() {
         width="$min_width"
     fi
 
-    if $stdout_terminal; then
-        fold -s -w"$width" | "${PAGER:-less}"
+    if $stdout_terminal && [ cat != "$pager" ]; then
+        fold -s -w"$width" | "$pager"
     else
         fold -s -w"$width"
     fi
@@ -116,6 +124,7 @@ fi
 if [ $# = 1 -a x"${1:-}" != x- ]; then
     exec <"$1"
 fi
+
 if $synopsis_only; then
     sed -r -n '/^#/d; s/ +$//; /^$/q; p' | output_text
 else
