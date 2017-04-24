@@ -155,7 +155,7 @@ Manpages will be preferred (as the accepted standard), but could be generated fr
 Formats
 ----
 
-Format file extensions must only use the characters "-A-Za-z0-9.,\_".  Text format is the only format currently supported by this implementation, but hypothetical examples include "md" and "txt.gz".
+Format file extensions must only use the characters "-A-Za-z0-9.,\_".  Text format is the only format currently supported by this implementation, but hypothetical examples include "md" and "txt.7z".
 
 ### Text Format
 
