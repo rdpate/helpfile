@@ -167,7 +167,28 @@ main() {
         find_helpfile "$section" "$@" || true
         find_internal_section "$section" "$@" || true
         if $search; then
-            fatal 70 TODO
+            set -- "$(printf /%s "$@" | sed -r 's,^/,,; s,//+,/,g; s,/+$,,')"
+            case "$1" in
+                /*) ;;
+                *) set -- "$PWD/$1" ;;
+            esac
+            while true; do
+                case "$1" in
+                    /?*/*)
+                        set -- "${1%/*}"
+                        printf %s\\n "$1"
+                        find_helpfile "$section" "$1" || true
+                        find_internal_section "$section" "$1" || true
+                        ;;
+                    /?*)
+                        set -- /
+                        printf %s\\n "$1"
+                        find_helpfile "$section" / || true
+                        break
+                        ;;
+                    *) fatal 70 'unknown while searching' ;;
+                esac
+            done
         fi
         if [ $path_lookup = true -a help = "$section" -a $# = 1 ]; then
             case "$orig1" in
@@ -184,7 +205,7 @@ main() {
         elif find_internal_section "$section" "$@"; then
             return 0
         elif $search; then
-            fatal 70 TODO
+            fatal 70 'TODO: --search'
         elif [ $path_lookup = true -a help = "$section" -a $# = 1 ]; then
             case "$orig1" in
                 */*) ;;
@@ -211,14 +232,28 @@ find_helpfile() { # SECTION FILE [SUBTOPIC..]
     else
         subtopic="$(printf /%s "$@" | sed -r 's,//+,/,g; s,/+$,,')"
     fi
-    left=
-    right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
-    case "$right" in
-        */..*)
-            fatal 69 'basename with two leading periods'
+    # TODO: remove hacky cases here
+    # probably need to re-think how readlink -f is used in the general case, esp. how it only applies to $file while the over-arching idea is directory subtopics are identical to files within that directory
+    case "$file" in
+        /) left= right= ;;
+        *)
+            left=
+            right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
+            case "$right" in
+                */..*)
+                    fatal 69 'basename with two leading periods'
+                    ;;
+                */.)
+                    right="${right%/.}"
+                    ;;
+            esac
             ;;
-        */.)
-            right="${right%/.}"
+    esac
+    case "$file" in
+        /?*/?*) ;;
+        /?*)
+            left=
+            right="$file"
             ;;
     esac
     orig_right="$right"
