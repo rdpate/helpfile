@@ -175,6 +175,12 @@ The text format is "plain" and denoted with "txt" file extension.  Any line star
     - if version string is unknown or missing but non-synopsis text is included, the version string MUST NOT be blank and SHOULD be "unknown"
 
 
+Why use directories for topics and subtopics?
+----
+
+Instead of placing topic (and subtopics) into directory structure, they could be included in filenames, eg. ".../help/topic[.subtopic].lang.format".  However, this complicates and lengthens lookup with additional permutations on possible locations.  Employing directories unifies files as subtopics of their parent directories without necessitating existing files to use their corresponding help files.  Help for the "root" of a package is thus naturally placed at the topmost level, eg. "help -v .".
+
+
 Future Ideas
 ----
 
