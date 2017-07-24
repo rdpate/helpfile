@@ -5,6 +5,7 @@ fatal() {
     exit "$1"
 }
 
+search=false
 section=help
 user_lang=
 user_lang_country=
@@ -40,6 +41,10 @@ handle_option() {
             [ $# = 2 ] || fatal 64 "missing value for option $1"
             user_lang_country="$2"
             ;;
+        search)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            search=true
+            ;;
         section)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
             [ -n "$2" ] || fatal 64 "empty value for option $1"
@@ -47,7 +52,13 @@ handle_option() {
             ;;
         v|version)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            search=true
             section=version
+            ;;
+        legal)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            search=true
+            section=legal
             ;;
         *)
             fatal 64 "unknown option: $1"
@@ -155,6 +166,9 @@ main() {
     if $show_all; then
         find_helpfile "$section" "$@" || true
         find_internal_section "$section" "$@" || true
+        if $search; then
+            fatal 70 TODO
+        fi
         if [ $path_lookup = true -a help = "$section" -a $# = 1 ]; then
             case "$orig1" in
                 */*) ;;
@@ -169,6 +183,8 @@ main() {
             return 0
         elif find_internal_section "$section" "$@"; then
             return 0
+        elif $search; then
+            fatal 70 TODO
         elif [ $path_lookup = true -a help = "$section" -a $# = 1 ]; then
             case "$orig1" in
                 */*) ;;

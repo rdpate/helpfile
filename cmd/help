@@ -7,6 +7,7 @@ fatal() {
 }
 
 section=help
+locate_search=
 locate_flags=
 format_short=
 format_wrap=
@@ -30,6 +31,10 @@ handle_option() {
             [ $# = 2 ] || fatal 64 "missing value for option $1"
             user_lang="$2"
             ;;
+        search)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            locate_flags="$locate_flags --search"
+            ;;
         section)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
             [ -n "$2" ] || fatal 64 "empty value for option $1"
@@ -41,7 +46,13 @@ handle_option() {
             ;;
         v|version)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            locate_flags="$locate_flags --search"
             section=version
+            ;;
+        legal)
+            [ $# = 1 ] || fatal 64 "unexpected value for option $1"
+            locate_flags="$locate_flags --search"
+            section=legal
             ;;
         wrap)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
