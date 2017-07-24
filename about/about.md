@@ -34,7 +34,7 @@ After the synopsis is the rest of the section:
 Commands
 ----
 
-### helpcmd NAME [SUBTOPIC..]
+### help NAME [SUBTOPIC..]
 
 Locate and display help files.  Symlink into $PATH as "help", cd doc/examples, and run "help .".
 

@@ -2,7 +2,7 @@
 #.help
 # help NAME [SUBTOPIC..]
 #
-# Wrapper for "%helpfile/helpcmd --command".  Use "help ./X" to avoid $PATH lookup.
+# Wrapper for "help --command".  Use "help ./X" to avoid $PATH lookup.
 
-# You may symlink this file directly, or else copy it and change the line below with the explicit path to helpcmd.
-exec "$(dirname "$(readlink -f "$0")")/../../helpcmd" --command "$@"
+# You may symlink this file directly, or else copy it and change the line below with the explicit path to help.
+exec "$(dirname "$(readlink -f "$0")")/../../cmd/help" --command "$@"
