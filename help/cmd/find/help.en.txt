@@ -1,0 +1,15 @@
+% [BASE]
+
+Find help files (including subtopics) for files starting from BASE or the current directory.  The help files need not be a subdirectory of BASE.
+
+Options:
+    --lang=L        use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+
+    --existing      only find help for existing targets
+    --dirs          only find help for existing directory targets
+    --files         only find help for existing file targets
+    --missing       only find help for missing targets
+
+-v  --version       version instead of help (--section=version)
+    --section=S     find section S (default: help)
+    --debug-locations     show locations on stderr while searching

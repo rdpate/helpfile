@@ -1,0 +1,13 @@
+% [FILE]
+
+Format FILE for fixed-width display.  Use stdin if FILE is "-" or missing.
+
+Options:
+-s  --short         exit after synopsis
+    --wrap=N        wrap lines to N width or 0 for no wrap
+    --no-wrap       --wrap=0
+    --no-pager      never use a pager
+
+If output is a terminal:
+- wrap at terminal width if less than wrap option
+- use $PAGER (or less), unless --no-pager

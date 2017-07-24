@@ -1,18 +1,4 @@
 #!/bin/sh -ue
-#.help
-# %helpfile/format-txt-fw [FILE]
-#
-# Format FILE for fixed-width display.  Use stdin if FILE is "-" or missing.
-#
-# Options:
-# -s  --short       exit after synopsis
-#     --wrap=N      wrap lines to N width or 0 for no wrap
-#     --no-wrap     --wrap=0
-#     --no-pager    never use a pager
-#
-# If output to a terminal:
-# - wrap at terminal width if less than wrap option
-# - use $PAGER (or less)
 
 base_prog="$(readlink -f "$0")"
 fatal() {

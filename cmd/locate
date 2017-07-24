@@ -1,21 +1,4 @@
 #!/bin/sh -ue
-#.help
-# %helpfile/locate NAME [SUBTOPIC..]
-#
-# Locate filename for NAME's help, either overview or for SUBTOPIC.
-#
-# Output on success is "file FILENAME", "internal SECTION FILENAME", or "man SECTION NAME".
-#
-# Options:
-# -v  --version     version instead of help (--section=version)
-#     --lang=L      use L instead of $LC_ALL, $LC_CTYPE, or $LANG
-#     --format=F    preferred formats, comma separated
-# -a  --all         list all matches instead of first
-#
-# -c  --command     lookup through $PATH if NAME lacks "/", like which(1)
-#
-#     --section=S   locate section S (default: help)
-#     --debug-locations     show locations on stderr while searching
 
 fatal() {
     printf %s\\n "$(readlink -f "$0") error: $2" >&2

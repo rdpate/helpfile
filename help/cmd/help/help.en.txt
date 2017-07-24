@@ -1,0 +1,15 @@
+% NAME [SUBTOPIC..]
+
+Show NAME's help overview or SUBTOPIC help.  Output is suitable for fixed-width display.
+
+Options:
+-v  --version       version instead of help (--section=version)
+-s  --short         help synopsis (or version string) only
+    --lang=L        use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+
+-c  --command       lookup through $PATH if NAME lacks "/", like which(1)
+    --wrap=N        wrap lines to N width or 0 for no wrap
+    --no-wrap       --wrap=0
+
+    --section=S     show section S (default: help)
+    --debug-locations     show locations on stderr while searching
