@@ -184,9 +184,23 @@ main() {
             file="/${topic%%/*}"
             topic="${topic#*/}"
             # resolve symlinks
-            while [ -e "$file" -a -n "$topic" ]; do
-                file="$(readlink -f "$file")/${topic%%/*}"
-                topic="${topic#*/}"
+            while [ -e "$file" ]; do
+                case "$topic" in
+                    '')
+                        file="$(readlink -f "$file")"
+                        break
+                        ;;
+                    ./*) topic="${topic#./}" ;;
+                    .) topic= ;;
+                    */*)
+                        file="$(readlink -f "$file")/${topic%%/*}"
+                        topic="${topic#*/}"
+                        ;;
+                    *)
+                        file="$(readlink -f "$file")/$topic"
+                        topic=
+                        ;;
+                esac
             done
             # canonicalize leftover topic
             while [ -n "$topic" ]; do
