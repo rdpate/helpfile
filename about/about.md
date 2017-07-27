@@ -54,7 +54,7 @@ Format FILE as txt (see Text Format) with options for fixed-width output.
 Locating Sections
 ----
 
-Help text is divided by section into files located in a "help" shadow directory tree.  The help files are in a directory named after the target file and subtopic, with the files named with section type, language, and file format (separated by periods).
+Help text is divided by section into files located in a "help" shadow directory tree.  The help files are in a directory named after the file or topic, with the files named with section type, language, and file format (separated by periods).
 
     /path/to/file
 
@@ -64,26 +64,9 @@ Help text is divided by section into files located in a "help" shadow directory 
     # additionally, for a directory:
     /path/to/file/help/help.en.txt
 
-The target file's parent directory is first resolved to be absolute without symlinks (eg. readlink -f).  Then help directories are searched "outside-in", under the presumption that system- and user-supplied files are found first and override package- and locally-supplied files.  The first file found matching basename, subtopic, section, and an acceptable language (see Section Languages) stops the search, even if continuing would find different languages or formats in another directory.
+Help directories are searched "outside-in", under the presumption that system- and user-supplied files are found first and override package- and locally-supplied files.  The first file found matching topic, section, and an acceptable language (see Section Languages) stops the search, even if continuing would find different languages or formats in another directory.  If a matching help file is not found and the target path contains a symlink, the earliest symlink is resolved and the search restarts.
 
-If a matching help file is still not found and the target file is a symlink, it is resolved and the search restarts:
-
-    $ readlink -f example
-    /path/to/example
-    $ ls -d /help /path/help /path/help/to/example/help.en.txt /path/to/help
-    ls: /help: No such file or directory
-    /path/help
-    ls: /path/help/to/example/help.en.txt: No such file or directory
-    ls: /path/to/help: No such file or directory
-    $ readlink example
-    ../../another/path/another-name
-    $ readlink -f /path/to/../../another/path
-    /another/path
-    $ ls -d /another/help /another/path/help/another-name/help.en.txt
-    ls: /another/help: No such file or directory
-    /another/path/help/another-name/help.en.txt
-
-The first (outside-in) candidate with any language is saved and used if the search is finally exhausted.  If a help file is still not found, internal sections are searched (see Internal Sections).
+The first (outside-in) candidate with any language is saved and used if the search is exhausted without finding a matching language.  If a help file is still not found, internal sections are searched (see Internal Sections).
 
 Use --debug-locations to see the locations searched.
 

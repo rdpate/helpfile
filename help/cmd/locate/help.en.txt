@@ -1,6 +1,6 @@
-% NAME [SUBTOPIC..]
+% TOPIC..
 
-Locate filename for NAME's help, either overview or for SUBTOPIC.
+Locate help for TOPIC.
 
 Output on success is "file FILENAME", "internal SECTION FILENAME", or "man SECTION NAME".
 

@@ -31,11 +31,14 @@ handle_option() {
             ;;
         format)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
-            x="$(printf %s "$2" | LC_ALL=C tr -d -c \\-A-Za-z0-9.,_)"
+            x="$(printf %s "$2" | LC_ALL=C tr -d -c \\-A-Za-z0-9,_)"
             if [ x"$x" != x"$2" ]; then
-                fatal 64 'invalid --format value'
+                fatal 64 "invalid --$1 value: disallowed characters"
             fi
             pref_formats="$(printf %s "$2" | tr , ' ')"
+            case "$pref_formats" in
+                *'  '*|' '*|*' ') fatal 64 "invalid --$1 value: empty format in list" ;;
+            esac
             ;;
         lang)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
@@ -97,22 +100,20 @@ if [ $# -eq 0 ]; then
     fatal 64 'expected arguments: NAME'
 else
     check_args() {
-        local x
-        if [ '' = "$1" ]; then
-            fatal 64 'invalid empty NAME'
+        if [ -z "$1" ]; then
+            fatal 64 'invalid TOPIC: empty argument'
         fi
         shift
-        for x; do
-            case "$x" in
+        while [ $# != 0 ]; do
+            case "$1" in
                 '')
-                    fatal 64 'invalid SUBTOPIC: empty argument'
-                    ;;
-                .*|*/.*)
-                    fatal 64 'invalid SUBTOPIC: leading period'
+                    fatal 64 'invalid TOPIC: empty argument'
                     ;;
                 /)
-                    fatal 64 'invalid SUBTOPIC: bad name'
+                    fatal 64 'invalid TOPIC: bad name'
+                    ;;
             esac
+            shift
         done
     }
     check_args "$@"
@@ -151,178 +152,154 @@ else
 fi
 
 main() {
-    local orig1 file
-    orig1="$1"
+    local manpage file topic
+    manpage=
     if $path_lookup; then
         case "$1" in
-            */*) ;;
+            */*|.|..) ;;
             *)
+                if [ help = "$section" -a $# = 1 ]; then
+                    case "$1" in
+                        *' '*) ;;
+                        # TODO: better way to handle spaces than above?
+                        *) manpage="$1" ;;
+                    esac
+                fi
                 file="$(which "$1" 2>/dev/null)" || fatal 69 "not found in PATH: $1"
                 shift
                 set -- "$file" "$@"
                 ;;
         esac
     fi
-    if $show_all; then
-        find_helpfile "$section" "$@" || true
-        find_internal_section "$section" "$@" || true
-        if $search; then
-            set -- "$(printf /%s "$@" | sed -r 's,^/,,; s,//+,/,g; s,/+$,,')"
-            case "$1" in
-                /*) ;;
-                *) set -- "$PWD/$1" ;;
-            esac
-            while true; do
-                case "$1" in
-                    /?*/*)
-                        set -- "${1%/*}"
-                        printf %s\\n "$1"
-                        find_helpfile "$section" "$1" || true
-                        find_internal_section "$section" "$1" || true
+    topic="$(printf /%s "$@" | sed -r 's,^/,,; s,//+,/,g; s,/+$,,')"
+    case "$topic" in
+        '') topic=/ ;;
+        /*) ;;
+        *) topic="$(pwd)/$topic" ;;
+    esac
+    case "$topic" in
+        /) ;;
+        /*)
+            topic="${topic#/}"
+            file="/${topic%%/*}"
+            topic="${topic#*/}"
+            # resolve symlinks
+            while [ -e "$file" -a -n "$topic" ]; do
+                file="$(readlink -f "$file")/${topic%%/*}"
+                topic="${topic#*/}"
+            done
+            # canonicalize leftover topic
+            while [ -n "$topic" ]; do
+                case "$topic" in
+                    ./*) topic="${topic#./}" ;;
+                    .) topic= ;;
+                    ../*|..) fatal 64 'invalid ".." in TOPIC' ;;
+                    */*)
+                        file="$file/${topic%%/*}"
+                        topic="${topic#*/}"
                         ;;
-                    /?*)
-                        set -- /
-                        printf %s\\n "$1"
-                        find_helpfile "$section" / || true
-                        break
+                    *)
+                        file="$file/$topic"
+                        topic=
                         ;;
-                    *) fatal 70 'unknown while searching' ;;
                 esac
             done
+            topic="$file"
+            ;;
+        *) fatal 70 'internal error: non-absolute topic' ;;
+    esac
+    if $show_all; then
+        find_helpfile "$section" "$topic" || true
+        find_internal_section "$section" "$topic" || true
+        if $search; then
+            while [ / != "$topic" ]; do
+                topic="$(dirname "$topic")"
+                find_helpfile "$section" "$topic" || true
+                find_internal_section "$section" "$topic" || true
+            done
         fi
-        if [ $path_lookup = true -a help = "$section" -a $# = 1 ]; then
-            case "$orig1" in
-                */*) ;;
-                *' '*) ;;
-                *)
-                    printf 'man 1 %s\n' "$orig1"
-                    ;;
-            esac
+        if [ -n "$manpage" ]; then
+            printf 'man 1 %s\n' "$manpage"
         fi
     else
-        if find_helpfile "$section" "$@"; then
+        if find_helpfile "$section" "$topic"; then
             return 0
-        elif find_internal_section "$section" "$@"; then
+        elif find_internal_section "$section" "$topic"; then
             return 0
         elif $search; then
-            fatal 70 'TODO: --search'
-        elif [ $path_lookup = true -a help = "$section" -a $# = 1 ]; then
-            case "$orig1" in
-                */*) ;;
-                *' '*)
-                    fatal 69 "defaulting to man with space in command: $orig1"
-                    ;;
-                *)
-                    printf 'man 1 %s\n' "$orig1"
+            while [ / != "$topic" ]; do
+                topic="$(dirname "$topic")"
+                if find_helpfile "$section" "$topic"; then
                     return 0
-                    ;;
-            esac
+                elif find_internal_section "$section" "$topic"; then
+                    return 0
+                fi
+            done
+        fi
+        if [ -n "$manpage" ]; then
+            printf 'man 1 %s\n' "$manpage"
+            return 0
         fi
         fatal 69 "$section not found: $*"
     fi
 }
 
-find_helpfile() { # SECTION FILE [SUBTOPIC..]
-    local section file subtopic left right dir link
-    section="$1"
-    file="$2"
-    shift 2
-    if [ $# = 0 ]; then
-        subtopic=
-    else
-        subtopic="$(printf /%s "$@" | sed -r 's,//+,/,g; s,/+$,,')"
-    fi
-    # TODO: remove hacky cases here
-    # probably need to re-think how readlink -f is used in the general case, esp. how it only applies to $file while the over-arching idea is directory subtopics are identical to files within that directory
-    case "$file" in
-        /) left= right= ;;
-        *)
-            left=
-            right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
-            case "$right" in
-                */..*)
-                    fatal 69 'basename with two leading periods'
-                    ;;
-                */.)
-                    right="${right%/.}"
-                    ;;
-            esac
-            ;;
-    esac
-    case "$file" in
-        /?*/?*) ;;
-        /?*)
-            left=
-            right="$file"
-            ;;
-    esac
-    orig_right="$right"
-    right="$(printf %s "$right" | sed -r 's,/\.,/,g')"
-    while :; do
-        dir="$left/help$right$subtopic"
-        if $debug_locations; then
-            printf 'trying file %s.LANG.FORMAT\n' "$dir/$section" >&2
+find_helpfile() { # SECTION TOPIC
+    local left right dir
+    left=
+    right="${2#/}"
+    while true; do
+        if [ -n "$right" ]; then
+            dir="$left/help/$right"
+        else
+            dir="$left/help"
         fi
         if [ -d "$dir" ]; then
-            if find_helpfile_lang_format "$dir/$section"; then
-                if ! $show_all; then
-                    return 0
-                fi
+            if $debug_locations; then
+                printf 'trying files %s.LANG.FORMAT\n' "$dir/$1" >&2
             fi
+            if find_helpfile_lang_format "$dir/$1"; then
+                $show_all || return 0
+            fi
+        elif $debug_locations; then
+            printf 'skip non-directory %s\n' "$dir" >&2
         fi
-
+        [ -n "$right" ] || break
+        while true; do
+            case "$right" in
+                ./*|.) fatal 64 'TOPIC component consists of only periods' ;;
+                .?*) right="${right#.}" ;;
+                *) break ;;
+            esac
+        done
         case "$right" in
-            /*/*)
-                orig_right="${orig_right#/}"
-                right="${right#/}"
-                left="$left/${orig_right%%/*}"
-                orig_right="/${orig_right#*/}"
-                right="/${right#*/}"
-                continue
-                ;;
-            '')
+            */*)
+                left="$left/${right%%/*}"
+                right="${right#*/}"
                 ;;
             *)
-                left="$left$orig_right"
-                orig_right=
+                left="$left/$right"
                 right=
-                continue
                 ;;
         esac
-        if [ -L "$file" ]; then
-            link="$(readlink "$file")"
-            case "$link" in
-                /*)
-                    file="$link"
-                    ;;
-                *)
-                    file="$(dirname "$file")/$link"
-                    ;;
-            esac
-            left=
-            right="$(readlink -f "$(dirname "$file")")/$(basename "$file")"
-            case "$right" in
-                */..*)
-                    fatal 69 'basename with two leading periods'
-                    ;;
-                */.)
-                    right="${right%/.}"
-                    ;;
-            esac
-            orig_right="$right"
-            right="$(printf %s "$right" | sed -r 's,/\.,/,g')"
-        else
-            if [ -n "$first_lang_file" ]; then
-                printf 'file %s\n' "$first_lang_file"
-                return 0
+        if [ ! -d "$left" ]; then
+            if $debug_locations; then
+                printf %s\\n "skip non-directory prefix $left" >&2
             fi
-            return 1
+            break
         fi
     done
+    if [ $show_all = false -a -n "$first_lang_file" ]; then
+        printf 'file %s\n' "$first_lang_file"
+        return 0
+    fi
+    return 2
 }
 
 find_helpfile_lang_format() { # BASE
     local lang target format
+    # TODO: check both conditions: pref_formats doesn't seem to be used in 'else'
+    # make sure first_lang_file is only set if not show_all
     if [ -n "$user_lang" ]; then
         if $show_all; then
             for lang in $user_lang_country $user_lang any; do
@@ -364,18 +341,16 @@ find_helpfile_lang_format() { # BASE
         for target in "$1.any".?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?*; do
             if [ -e "$target" ]; then
                 printf 'file %s\n' "$target"
-                if ! $show_all; then
-                    return 0
-                fi
+                show_all || return 0
             fi
         done
         return 1
     fi
 }
 
-find_internal_section() { # SECTION FILE [SUBTOPIC..]
+find_internal_section() { # SECTION TOPIC
     # Return 2 if internal section not found.
-    if [ $# != 2 -o ! -f "$2" ]; then
+    if [ ! -f "$2" ]; then
         return 2
     fi
     if $debug_locations; then
