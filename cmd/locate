@@ -39,6 +39,7 @@ handle_option() {
             case "$pref_formats" in
                 *'  '*|' '*|*' ') fatal 64 "invalid --$1 value: empty format in list" ;;
             esac
+            pref_formats=" $pref_formats "
             ;;
         lang)
             [ $# = 2 ] || fatal 64 "missing value for option $1"
@@ -137,12 +138,15 @@ check_user_lang_country() {
     esac
 }
 if [ -n "$user_lang_country" ]; then
-    if [ none = "$user_lang_country" ]; then
-        user_lang=
-        user_lang_country=
-    else
-        check_user_lang_country || fatal 64 'invalid --lang value'
-    fi
+    case "$user_lang_country" in
+        any)
+            user_lang=
+            user_lang_country=
+            ;;
+        *)
+            check_user_lang_country || fatal 64 'invalid --lang value'
+            ;;
+    esac
 else
     for user_lang_country in "${LC_ALL:-}" "${LC_CTYPE:-}" "${LANG:-}"; do
         if check_user_lang_country; then
@@ -161,7 +165,6 @@ main() {
                 if [ help = "$section" -a $# = 1 ]; then
                     case "$1" in
                         *' '*) ;;
-                        # TODO: better way to handle spaces than above?
                         *) manpage="$1" ;;
                     esac
                 fi
@@ -315,48 +318,83 @@ find_helpfile_lang_format() { # BASE
     # TODO: check both conditions: pref_formats doesn't seem to be used in 'else'
     # make sure first_lang_file is only set if not show_all
     if [ -n "$user_lang" ]; then
-        if $show_all; then
+        for format in $pref_formats; do
             for lang in $user_lang_country $user_lang any; do
-                for target in "$1.$lang."?*; do
-                    if [ -e "$target" ]; then
-                        printf 'file %s\n' "$target"
-                    fi
-                done
-            done
-        else
-            for format in $pref_formats; do
-                for lang in $user_lang_country $user_lang any; do
-                    target="$1.$lang.$format"
-                    if [ -e "$target" ]; then
-                        printf 'file %s\n' "$target"
-                        return 0
-                    fi
-                done
-            done
-            for lang in $user_lang_country $user_lang any; do
-                for target in "$1.$lang."?*; do
-                    if [ -e "$target" ]; then
-                        printf 'file %s\n' "$target"
-                        return 0
-                    fi
-                done
-            done
-            if [ -z "$first_lang_file" ]; then
-                for target in "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?*; do
-                    if [ -e "$target" ]; then
-                        first_lang_file="$target"
-                        return 1
-                    fi
-                done
-            fi
-            return 1
-        fi
-    else
-        for target in "$1.any".?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].?*; do
-            if [ -e "$target" ]; then
+                target="$1.$lang.$format"
+                [ -e "$target" ] || continue
+                [ -n "$first_lang_file" ] || first_lang_file="$target"
                 printf 'file %s\n' "$target"
-                show_all || return 0
+                $show_all || return 0
+            done
+        done
+        for lang in $user_lang_country $user_lang any; do
+            for target in "$1.$lang."*; do
+                [ -e "$target" ] || continue
+                format="${target##*/}"
+                format="${format#*.*.}"
+                case "$format" in
+                    ''|*.*)
+                        if $debug_locations; then
+                            printf 'ignoring bad format: %s\n' "$target" >&2
+                        fi
+                        continue
+                        ;;
+                esac
+                case "$pref_formats" in
+                    *" $format "*) continue ;;
+                esac
+                [ -n "$first_lang_file" ] || first_lang_file="$target"
+                printf 'file %s\n' "$target"
+                $show_all || return 0
+            done
+        done
+        [ -z "$first_lang_file" ] || return 1
+        for target in "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].*; do
+            [ -e "$target" ] || continue
+            format="${target##*/}"
+            format="${format#*.*.}"
+            case "$format" in
+                ''|*.*)
+                    if $debug_locations; then
+                        printf 'ignoring bad format: %s\n' "$target" >&2
+                    fi
+                    continue
+                    ;;
+            esac
+            if $debug_locations; then
+                printf 'saving as first found: %s\n' "$target" >&2
             fi
+            first_lang_file="$target"
+            return 1
+        done
+        return 1
+    else
+        for format in $pref_formats; do
+            for target in "$1.any.$format" "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]".$format" "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]".$format"; do
+                [ -e "$target" ] || continue
+                [ -n "$first_lang_file" ] || first_lang_file="$target"
+                printf 'file %s\n' "$target"
+                $show_all || return 0
+            done
+        done
+        for target in "$1.any".* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].*; do
+            [ -e "$target" ] || continue
+            format="${target##*/}"
+            format="${format#*.*.}"
+            case "$format" in
+                ''|*.*)
+                    if $debug_locations; then
+                        printf 'ignoring bad format: %s\n' "$target" >&2
+                    fi
+                    continue
+                    ;;
+            esac
+            case "$pref_formats" in
+                *" $format "*) continue ;;
+            esac
+            [ -n "$first_lang_file" ] || first_lang_file="$target"
+            printf 'file %s\n' "$target"
+            $show_all || return 0
         done
         return 1
     fi

@@ -68,7 +68,7 @@ Help directories are searched "outside-in", under the presumption that system- a
 
 The first (outside-in) candidate with any language is saved and used if the search is exhausted without finding a matching language.  If a help file is still not found, internal sections are searched (see Internal Sections).
 
-Use --debug-locations to see the locations searched.
+Use --debug-locations to see location details on stderr.
 
 ### Hidden Files
 
@@ -124,7 +124,7 @@ Section Languages
 
 The desired language is given by --lang or the first acceptable value from $LC\_ALL, $LC\_CTYPE, or $LANG.  This value is converted to lowercase and must match "language\[\_country\]\[.\*\]", where language is two ASCII letters and country, if present, is also two ASCII letters.
 
-Candidate directories are searched to find the first file matching language\_country, language, or "any" with a known format.  If --lang is empty or not specified and an acceptable value cannot be found from the environment or if --lang=none, this changes to find the first file matching "any" or, in an unspecified order, any language with or without country, also with a known format.
+Candidate directories are searched to find the first file matching language\_country, language, or "any" with a known format.  If --lang is empty or not specified and an acceptable value cannot be found from the environment, or if --lang=any, this changes to find the first file matching "any" or, in an unspecified order, any language with or without country, also with a known format.
 
 In either case, if a known format is not found but a matching language exists with an unknown format, that file is selected -- when it cannot be displayed, an error is given.  This prevents a file in an unsupported format from being hidden.
 
