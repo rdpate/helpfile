@@ -21,7 +21,9 @@ Each section starts with a synopsis whose meaning depends on the section:
 - *version* -- version string (eg. "2.1.3", "20170103", "0.1.0-dev")
 - *legal* -- name of license (or lack thereof)
 
-Every synopsis should be one logical line and ideally no longer than 40 characters, with the intention to be useful when displayed in a table-like layout using "name" and "synopsis" columns (so the name doesn't need to be repeated) as well as automatic extraction (eg. version string).
+Every synopsis should be short, ideally one line and no longer than 40 characters, with the intention to be useful when displayed in a table-like layout using "name" and "synopsis" columns (so the name doesn't need to be repeated in the synopsis) as well as automatic extraction (eg. version string).
+
+When retrieving a synopsis, a line which only consists of one or more equal signs ("====") is deleted.  This is intended to allow Markdown heading syntax without explicitly supporting that format (yet?).
 
 After the synopsis is the rest of the section:
 

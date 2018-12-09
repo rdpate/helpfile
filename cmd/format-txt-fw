@@ -112,7 +112,7 @@ if [ $# = 1 -a x"${1:-}" != x- ]; then
 fi
 
 if $synopsis_only; then
-    sed -r -n '/^#/d; s/ +$//; /^$/q; p' | output_text
+    sed -r -n '/^#|^=+$/d; s/ +$//; /^$/q; p' | output_text
 else
     sed -r -n '/^#/d; s/ +$//; p' | cat -s | output_text
 fi
