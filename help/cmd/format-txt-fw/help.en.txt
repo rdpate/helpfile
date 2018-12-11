@@ -9,5 +9,5 @@ Options:
     --no-pager      never use a pager
 
 If output is a terminal:
-- wrap at terminal width if less than wrap option
-- use $PAGER (or less), unless --no-pager
+* wrap at terminal width if less than wrap option
+* use $PAGER (or less), unless --no-pager

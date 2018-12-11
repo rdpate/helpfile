@@ -9,17 +9,17 @@ Sections
 
 Help is split into named sections:
 
-- *help* -- overview
-- *version* -- version string and details
-- *legal* -- license, copyright, and related
-- *x-* prefix -- reserved for experimental (and only experimental) use
-- (more sections to be determined)
+* *help* -- overview
+* *version* -- version string and details
+* *legal* -- license, copyright, and related
+* *x-* prefix -- reserved for experimental (and only experimental) use
+* (more sections to be determined)
 
 Each section starts with a synopsis whose meaning depends on the section:
 
-- *help* -- descriptive phrase
-- *version* -- version string (eg. "2.1.3", "20170103", "0.1.0-dev")
-- *legal* -- name of license (or lack thereof)
+* *help* -- descriptive phrase
+* *version* -- version string (eg. "2.1.3", "20170103", "0.1.0-dev")
+* *legal* -- name of license (or lack thereof)
 
 Every synopsis should be short, ideally one line and no longer than 40 characters, with the intention to be useful when displayed in a table-like layout using "name" and "synopsis" columns (so the name doesn't need to be repeated in the synopsis) as well as automatic extraction (eg. version string).
 
@@ -27,10 +27,10 @@ When retrieving a synopsis, a line which only consists of one or more equal sign
 
 After the synopsis is the rest of the section:
 
-- *help* -- varies greatly
-    - for executables: operation details, example command lines, and option descriptions
-- *version* -- extraneous or verbose details; see doc/vim-version.md for an example
-- *legal* -- copyright statements and legal text
+* *help* -- varies greatly
+    * for executables: operation details, example command lines, and option descriptions
+* *version* -- extraneous or verbose details; see doc/vim-version.md for an example
+* *legal* -- copyright statements and legal text
 
 
 Commands
@@ -146,18 +146,18 @@ Format file extensions must only use the characters "-A-Za-z0-9.,\_".  Text form
 
 The text format is "plain" and denoted with "txt" file extension.  Any line starting with "#" (no indentation allowed) is a comment and will be ignored.  This list of requirements must be followed:
 
-- text MUST be encoded in UTF-8 without a byte-order mark
-- text MUST NOT be hard-wrapped, it will be wrapped according to the user's preferences and current display (which may not be a terminal)
-- text MUST NOT contain markup not intended to be directly read by a person
-- text MUST NOT have leading blank lines
-- text SHOULD NOT have trailing blank lines (including after comment lines are deleted)
-- lines MUST end with a newline (including the last line)
-- text MUST NOT contain control characters (besides newline), including carriage return and tab
-- for help sections, a synopsis MUST be at the top followed by a blank line if text follows
-- for help sections on commands, the synopsis MUST be one or more lines showing usage, eg. "command FOO [BAR..]"
-    - ideally, only one line is listed; otherwise the first line SHOULD be the most common usage
-- for version sections, the version string MUST be the first line followed by a blank line if text follows
-    - if version string is unknown or missing but non-synopsis text is included, the version string MUST NOT be blank and SHOULD be "unknown"
+* text MUST be encoded in UTF-8 without a byte-order mark
+* text MUST NOT be hard-wrapped, it will be wrapped according to the user's preferences and current display (which may not be a terminal)
+* text MUST NOT contain markup not intended to be directly read by a person
+* text MUST NOT have leading blank lines
+* text SHOULD NOT have trailing blank lines (including after comment lines are deleted)
+* lines MUST end with a newline (including the last line)
+* text MUST NOT contain control characters (besides newline), including carriage return and tab
+* for help sections, a synopsis MUST be at the top followed by a blank line if text follows
+* for help sections on commands, the synopsis MUST be one or more lines showing usage, eg. "command FOO [BAR..]"
+    * ideally, only one line is listed; otherwise the first line SHOULD be the most common usage
+* for version sections, the version string MUST be the first line followed by a blank line if text follows
+    * if version string is unknown or missing but non-synopsis text is included, the version string MUST NOT be blank and SHOULD be "unknown"
 
 
 Why use directories for topics and subtopics?
@@ -169,24 +169,24 @@ Instead of placing topic (and subtopics) into directory structure, they could be
 Future Ideas
 ----
 
-- alternative implementations should be possible, and every feature must keep that in mind
-    - allow for user config such as whether to use a pager or another file viewer (such as a browser), or to fallback to man (or something else)
-- how widely applicable is --short for help sections?
-    - subtopics?
-    - non-commands?
-    - what alternative synopsis will always make sense?
-- separate command to list subtopics?
-- will not support dynamic subtopics, where code must be executed to determine the final command (eg. as with hg and git aliases in .hgrc and .git/config)
-- more formats than plain text
-    - desirable: links, anchors, italic, bold, underline
-    - maybe Markdown
-    - probably only one more format, considering alternative implementations must support it too
-        - something human-readable as text strongly preferred, allows treating it as plain text if format isn't parsed
-- machine-readable specification for options and arguments to aid command completion
-    - more general "properties" specification? (such as documentation URL) but quickly getting more complex than required
-- internal sections could specify subtopic, language, and format through the section header
-    - these must be the only metadata in the section header, and correspond to the filename of a separate section
-    - "#.help.LANG.FORMAT SUBTOPIC.."?
-    - "#.help /SUBTOPIC.LANG.FORMAT"?
-    - "#/SUBTOPIC.help.LANG.FORMAT"?
-    - inline sections are exactly equivalent to the contents of a separate section with specific line munging for comments (prefixing "#" for comments and blank lines or "# " otherwise)
+* alternative implementations should be possible, and every feature must keep that in mind
+    * allow for user config such as whether to use a pager or another file viewer (such as a browser), or to fallback to man (or something else)
+* how widely applicable is --short for help sections?
+    * subtopics?
+    * non-commands?
+    * what alternative synopsis will always make sense?
+* separate command to list subtopics?
+* will not support dynamic subtopics, where code must be executed to determine the final command (eg. as with hg and git aliases in .hgrc and .git/config)
+* more formats than plain text
+    * desirable: links, anchors, italic, bold, underline
+    * maybe Markdown
+    * probably only one more format, considering alternative implementations must support it too
+        * something human-readable as text strongly preferred, allows treating it as plain text if format isn't parsed
+* machine-readable specification for options and arguments to aid command completion
+    * more general "properties" specification? (such as documentation URL) but quickly getting more complex than required
+* internal sections could specify subtopic, language, and format through the section header
+    * these must be the only metadata in the section header, and correspond to the filename of a separate section
+    * "#.help.LANG.FORMAT SUBTOPIC.."?
+    * "#.help /SUBTOPIC.LANG.FORMAT"?
+    * "#/SUBTOPIC.help.LANG.FORMAT"?
+    * inline sections are exactly equivalent to the contents of a separate section with specific line munging for comments (prefixing "#" for comments and blank lines or "# " otherwise)
