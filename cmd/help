@@ -9,7 +9,7 @@ fatal() {
 section=help
 locate_search=
 locate_flags=
-format_short=
+format_synopsis=
 format_wrap=
 user_lang=
 if [ -t 1 ]; then
@@ -40,16 +40,16 @@ handle_option() {
             [ -n "$2" ] || fatal 64 "empty value for option $1"
             section="$2"
             ;;
-        s|short)
+        s|synopsis)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
-            format_short=--short
+            format_synopsis=--synopsis
             ;;
         v|version)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             locate_flags="$locate_flags --search"
             section=version
             ;;
-        legal)
+        l|legal|license)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             locate_flags="$locate_flags --search"
             section=legal
@@ -115,7 +115,7 @@ helpfile_locate() { # NAME [SUBTOPIC..]
         -- "$@"
 }
 helpfile_format_txt() { # [FILE]
-    "$(dirname "$base_prog")/format-txt-fw" $format_short $format_wrap -- "$@"
+    "$(dirname "$base_prog")/format-txt-fw" $format_synopsis $format_wrap -- "$@"
 }
 main() {
     local target type format section

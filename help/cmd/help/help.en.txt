@@ -3,15 +3,16 @@
 Show NAME's help overview or SUBTOPIC help.  Output is suitable for fixed-width display.
 
 Options:
--s  --short         synopsis only
--v  --version       search for version (--search --section=version)
-    --legal         search for legal text (--search --section=legal)
-    --lang=L        use L instead of $LC_ALL, $LC_CTYPE, or $LANG
+-s  --synopsis          show synopsis only
+-v  --version           search for version (--search --section=version)
+-l  --legal             search for legal text (--search --section=legal)
+    --license           --legal
+    --lang=L            use L instead of $LC_ALL, $LC_CTYPE, or $LANG
 
--c  --command       lookup through $PATH if NAME lacks "/", like which(1)
-    --wrap=N        wrap lines to N width or 0 for no wrap
-    --no-wrap       --wrap=0
+-c  --command           lookup through $PATH if NAME lacks "/", like which(1)
+    --wrap=N            wrap lines to N width or 0 for no wrap
+    --no-wrap           --wrap=0
 
-    --search        search parents until found
-    --section=S     show section S (default help)
-    --debug-locations     show locations on stderr while searching
+    --search            search parents until found
+    --section=S         show section S (default help)
+    --debug-locations   show locations on stderr while searching

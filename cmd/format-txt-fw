@@ -22,7 +22,7 @@ handle_option() {
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             pager=cat
             ;;
-        s|short)
+        s|synopsis)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             synopsis_only=true
             ;;
