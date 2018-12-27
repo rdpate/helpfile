@@ -128,6 +128,10 @@ main() {
             txt)
                 helpfile_format_txt "$target"
                 ;;
+            md)
+                # TODO: better Markdown support, even if rudimentary
+                helpfile_format_txt "$target"
+                ;;
             *)
                 fatal 69 "unknown file format: $target"
                 ;;
