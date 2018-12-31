@@ -267,7 +267,7 @@ find_helpfile() { # SECTION TOPIC
     right="${2#/}"
     while true; do
         if [ -n "$right" ]; then
-            dir="$left/help/$right"
+            dir="$left/help$(printf %s "/$right" | sed -r 's,/\.+,/,g')"
         else
             dir="$left/help"
         fi
@@ -282,13 +282,6 @@ find_helpfile() { # SECTION TOPIC
             printf 'skip non-directory %s\n' "$dir" >&2
         fi
         [ -n "$right" ] || break
-        while true; do
-            case "$right" in
-                ./*|.) fatal 64 'TOPIC component consists of only periods' ;;
-                .?*) right="${right#.}" ;;
-                *) break ;;
-            esac
-        done
         case "$right" in
             */*)
                 left="$left/${right%%/*}"

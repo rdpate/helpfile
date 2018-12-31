@@ -123,7 +123,8 @@ main() {
     type="${target%% *}"
     target="${target#* }"
     if [ file = "$type" ]; then
-        format="${target#*.*.}"
+        format="${target##*/}"
+        format="${format#*.*.}"
         case "$format" in
             txt)
                 helpfile_format_txt "$target"
@@ -133,7 +134,7 @@ main() {
                 helpfile_format_txt "$target"
                 ;;
             *)
-                fatal 69 "unknown file format: $target"
+                fatal 69 "unknown file format ($format): $target"
                 ;;
         esac
         return 0
