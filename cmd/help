@@ -115,7 +115,7 @@ helpfile_locate() { # NAME [SUBTOPIC..]
         -- "$@"
 }
 helpfile_format_txt() { # [FILE]
-    "$(dirname "$base_prog")/format-txt-fw" $format_synopsis $format_wrap -- "$@"
+    "$(dirname "$base_prog")/format-fw-txt" $format_synopsis $format_wrap -- "$@"
 }
 main() {
     local target type format section
@@ -123,8 +123,7 @@ main() {
     type="${target%% *}"
     target="${target#* }"
     if [ file = "$type" ]; then
-        format="${target##*/}"
-        format="${format#*.*.}"
+        format="${target##*.}"
         case "$format" in
             txt)
                 helpfile_format_txt "$target"

@@ -227,11 +227,13 @@ main() {
     esac
     if $show_all; then
         find_helpfile "$section" "$topic" || true
+        find_adjacent_file "$section" "$topic" || true
         find_internal_section "$section" "$topic" || true
         if $search; then
             while [ / != "$topic" ]; do
                 topic="$(dirname "$topic")"
                 find_helpfile "$section" "$topic" || true
+                find_adjacent_file "$section" "$topic" || true
                 find_internal_section "$section" "$topic" || true
             done
         fi
@@ -241,12 +243,16 @@ main() {
     else
         if find_helpfile "$section" "$topic"; then
             return 0
+        elif find_adjacent_file "$section" "$topic"; then
+            return 0
         elif find_internal_section "$section" "$topic"; then
             return 0
         elif $search; then
             while [ / != "$topic" ]; do
                 topic="$(dirname "$topic")"
                 if find_helpfile "$section" "$topic"; then
+                    return 0
+                elif find_adjacent_file "$section" "$topic"; then
                     return 0
                 elif find_internal_section "$section" "$topic"; then
                     return 0
@@ -391,6 +397,20 @@ find_helpfile_lang_format() { # BASE
         done
         return 1
     fi
+}
+
+find_adjacent_file() { # SECTION TOPIC
+    if $debug_locations; then
+        printf 'trying files %s.LANG.FORMAT\n' "$2.$1" >&2
+    fi
+    if find_helpfile_lang_format "$2.$1"; then
+        $show_all || return 0
+    fi
+    if [ $show_all = false -a -n "$first_lang_file" ]; then
+        printf 'file %s\n' "$first_lang_file"
+        return 0
+    fi
+    return 2
 }
 
 find_internal_section() { # SECTION TOPIC
