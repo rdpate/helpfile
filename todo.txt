@@ -1,0 +1,1 @@
+* remove 'local' from sh scripts

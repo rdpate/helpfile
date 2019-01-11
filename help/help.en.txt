@@ -55,8 +55,9 @@ Locating Sections
 Sections are located in various places, in order of precedence:
 
 1. shadow directory tree under a "help" directory
-2. adjacent to the files they describe as "FILE.SECTION.LANG.FORMAT"
-3. internal to the files they describe
+2. adjacent to the names they describe as "FILE.SECTION.LANG.FORMAT"
+3. (files) inside the files using lines prefixed by "#"
+4. fallback names
 
 
 Help Directory
@@ -116,6 +117,17 @@ Internal sections are for convenient self-contained scripts (or any file) which 
     not in any section
 
 
+Fallback Names
+----
+
+For directories only and as a concession to the immense popularity of Github establishing practice based on their convention, some fallback names are supported for directories only.  Encouragement is given to only use these names if using Github or another tool which requires them.
+
+* help section may be named README.md or README.txt
+* legal section may be named license.md or license.txt
+
+For Github in particular, note that README.md may be a symlink to help/help.en.md, but license.md will not be specially recognized if it is a symlink.
+
+
 Subtopics
 ----
 
@@ -148,7 +160,7 @@ Manpages will be preferred (as the accepted standard), but could be generated fr
 Formats
 ----
 
-Format file extensions must only use the characters "-A-Za-z0-9.,\_".  Text format is the only format currently supported by this implementation, but hypothetical examples include "md" and "txt.7z".
+Format file extensions must only use the characters "-A-Za-z0-9.,\_" (note: includes period).  Text format is the only format currently supported by this implementation, but hypothetical examples include "html" and "txt.7z".
 
 ### Text Format
 

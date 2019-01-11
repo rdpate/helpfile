@@ -225,36 +225,34 @@ main() {
         find_helpfile "$section" "$topic" || true
         find_adjacent_file "$section" "$topic" || true
         find_internal_section "$section" "$topic" || true
+        find_fallback "$section" "$topic" || true
         if $search; then
             while [ / != "$topic" ]; do
                 topic="$(dirname "$topic")"
                 find_helpfile "$section" "$topic" || true
                 find_adjacent_file "$section" "$topic" || true
                 find_internal_section "$section" "$topic" || true
+                find_fallback "$section" "$topic" || true
             done
         fi
         if [ -n "$manpage" ]; then
             printf 'man 1 %s\n' "$manpage"
         fi
     else
-        if find_helpfile "$section" "$topic"; then
-            return 0
-        elif find_adjacent_file "$section" "$topic"; then
-            return 0
-        elif find_internal_section "$section" "$topic"; then
-            return 0
-        elif $search; then
-            while [ / != "$topic" ]; do
-                topic="$(dirname "$topic")"
-                if find_helpfile "$section" "$topic"; then
-                    return 0
-                elif find_adjacent_file "$section" "$topic"; then
-                    return 0
-                elif find_internal_section "$section" "$topic"; then
-                    return 0
-                fi
-            done
-        fi
+        while true; do
+            if find_helpfile "$section" "$topic"; then
+                return 0
+            elif find_adjacent_file "$section" "$topic"; then
+                return 0
+            elif find_internal_section "$section" "$topic"; then
+                return 0
+            elif find_fallback "$section" "$topic"; then
+                return 0
+            fi
+            $search || break
+            [ / != "$topic" ] || break
+            topic="$(dirname "$topic")"
+        done
         if [ -n "$manpage" ]; then
             printf 'man 1 %s\n' "$manpage"
             return 0
@@ -325,10 +323,9 @@ find_helpfile_lang_format() { # BASE
         for lang in $user_lang_country $user_lang any; do
             for target in "$1.$lang."*; do
                 [ -e "$target" ] || continue
-                format="${target##*/}"
-                format="${format#*.*.}"
+                format="${target#"$1".*.}"
                 case "$format" in
-                    ''|*.*)
+                    '')
                         if $debug_locations; then
                             nonfatal "ignoring bad format: $target"
                         fi
@@ -346,12 +343,11 @@ find_helpfile_lang_format() { # BASE
         [ -z "$first_lang_file" ] || return 1
         for target in "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].*; do
             [ -e "$target" ] || continue
-            format="${target##*/}"
-            format="${format#*.*.}"
+            format="${target#"$1".*.}"
             case "$format" in
-                ''|*.*)
+                '')
                     if $debug_locations; then
-                        nonfatal "ignoring bad format: $target"
+                        nonfatal "ignoring bad filename: $target"
                     fi
                     continue
                     ;;
@@ -374,12 +370,11 @@ find_helpfile_lang_format() { # BASE
         done
         for target in "$1.any".* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].* "$1."[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]_[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz].*; do
             [ -e "$target" ] || continue
-            format="${target##*/}"
-            format="${format#*.*.}"
+            format="${target#"$1".*.}"
             case "$format" in
-                ''|*.*)
+                '')
                     if $debug_locations; then
-                        nonfatal "ignoring bad format: $target"
+                        nonfatal "ignoring bad filename: $target"
                     fi
                     continue
                     ;;
@@ -396,6 +391,9 @@ find_helpfile_lang_format() { # BASE
 }
 
 find_adjacent_file() { # SECTION TOPIC
+    if [ / = "$2" ]; then
+        return 2
+    fi
     if $debug_locations; then
         nonfatal "trying files $2.$1.LANG.FORMAT"
     fi
@@ -439,6 +437,35 @@ find_internal_section_read() { # SECTION <lines
                 ;;
         esac
     done
+}
+
+find_fallback() { # SECTION TOPIC
+    [ -d "$2" ] || return 2
+    if [ / = "$2" ]; then
+        set -- "$1" ""
+    fi
+    if [ help = "$1" ]; then
+        if $debug_locations; then
+            nonfatal "trying $2/README.{md,txt}"
+        fi
+        for x in md txt; do
+            x="$2/README.$x"
+            if [ -e "$x" ]; then
+                printf 'file %s\n' "$x"
+            fi
+        done
+    elif [ legal = "$1" ]; then
+        if $debug_locations; then
+            nonfatal "trying $2/license.{md,txt}"
+        fi
+        for x in md txt; do
+            x="$2/license.$x"
+            if [ -e "$x" ]; then
+                printf 'file %s\n' "$x"
+            fi
+        done
+    fi
+    return 2
 }
 
 main "$@"
