@@ -1,9 +1,7 @@
 #!/bin/sh -ue
 
-fatal() {
-    printf %s\\n "$(readlink -f "$0") error: $2" >&2
-    exit "$1"
-}
+fatal() { rc="$1"; shift; printf %s\\n "${0##*/} error: $*" >&2 || true; exit "$rc"; }
+nonfatal() { printf %s\\n "${0##*/}: $*" >&2 || true; }
 
 search=false
 section=help
@@ -69,7 +67,6 @@ handle_option() {
             ;;
     esac
 }
-
 while [ $# -gt 0 ]; do
     case "$1" in
         --)
@@ -95,7 +92,6 @@ while [ $# -gt 0 ]; do
             break;;
     esac
 done
-
 
 if [ $# -eq 0 ]; then
     fatal 64 'expected arguments: NAME'
@@ -279,13 +275,13 @@ find_helpfile() { # SECTION TOPIC
         fi
         if [ -d "$dir" ]; then
             if $debug_locations; then
-                printf 'trying files %s.LANG.FORMAT\n' "$dir/$1" >&2
+                nonfatal "trying files $dir/$1.LANG.FORMAT"
             fi
             if find_helpfile_lang_format "$dir/$1"; then
                 $show_all || return 0
             fi
         elif $debug_locations; then
-            printf 'skip non-directory %s\n' "$dir" >&2
+            nonfatal "skip non-directory $dir"
         fi
         [ -n "$right" ] || break
         case "$right" in
@@ -300,7 +296,7 @@ find_helpfile() { # SECTION TOPIC
         esac
         if [ ! -d "$left" ]; then
             if $debug_locations; then
-                printf %s\\n "skip non-directory prefix $left" >&2
+                nonfatal "skip non-directory prefix $left"
             fi
             break
         fi
@@ -334,7 +330,7 @@ find_helpfile_lang_format() { # BASE
                 case "$format" in
                     ''|*.*)
                         if $debug_locations; then
-                            printf 'ignoring bad format: %s\n' "$target" >&2
+                            nonfatal "ignoring bad format: $target"
                         fi
                         continue
                         ;;
@@ -355,13 +351,13 @@ find_helpfile_lang_format() { # BASE
             case "$format" in
                 ''|*.*)
                     if $debug_locations; then
-                        printf 'ignoring bad format: %s\n' "$target" >&2
+                        nonfatal "ignoring bad format: $target"
                     fi
                     continue
                     ;;
             esac
             if $debug_locations; then
-                printf 'saving as first found: %s\n' "$target" >&2
+                nonfatal "saving as first found: $target"
             fi
             first_lang_file="$target"
             return 1
@@ -383,7 +379,7 @@ find_helpfile_lang_format() { # BASE
             case "$format" in
                 ''|*.*)
                     if $debug_locations; then
-                        printf 'ignoring bad format: %s\n' "$target" >&2
+                        nonfatal "ignoring bad format: $target"
                     fi
                     continue
                     ;;
@@ -401,7 +397,7 @@ find_helpfile_lang_format() { # BASE
 
 find_adjacent_file() { # SECTION TOPIC
     if $debug_locations; then
-        printf 'trying files %s.LANG.FORMAT\n' "$2.$1" >&2
+        nonfatal "trying files $2.$1.LANG.FORMAT"
     fi
     if find_helpfile_lang_format "$2.$1"; then
         $show_all || return 0
@@ -419,7 +415,7 @@ find_internal_section() { # SECTION TOPIC
         return 2
     fi
     if $debug_locations; then
-        printf 'trying internal sections in %s\n' "$2" >&2
+        nonfatal "trying internal sections in $2"
     fi
     if sed -r 's/ +$//' "$2" | find_internal_section_read "$1"; then
         printf 'internal %s %s\n' "$1" "$2"
