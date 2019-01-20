@@ -87,7 +87,6 @@ done
 
 
 output_text() {
-    local width
     if ! $wrap; then
         if $stdout_terminal; then
             "$pager"

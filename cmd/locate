@@ -13,7 +13,6 @@ show_all=false
 path_lookup=false
 debug_locations=false
 handle_option() {
-    local x
     case "$1" in
         a|all)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
@@ -152,7 +151,6 @@ else
 fi
 
 main() {
-    local manpage file topic
     manpage=
     if $path_lookup; then
         case "$1" in
@@ -262,7 +260,6 @@ main() {
 }
 
 find_helpfile() { # SECTION TOPIC
-    local left right dir
     left=
     right="${2#/}"
     while true; do
@@ -307,7 +304,6 @@ find_helpfile() { # SECTION TOPIC
 }
 
 find_helpfile_lang_format() { # BASE
-    local lang target format
     # TODO: check both conditions: pref_formats doesn't seem to be used in 'else'
     # make sure first_lang_file is only set if not show_all
     if [ -n "$user_lang" ]; then
@@ -423,7 +419,6 @@ find_internal_section() { # SECTION TOPIC
     fi
 }
 find_internal_section_read() { # SECTION <lines
-    local line
     while :; do
         read -r line || return 2
         case "$line" in

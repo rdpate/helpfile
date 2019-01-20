@@ -112,7 +112,6 @@ helpfile_format() { # [FILE]
     "$(dirname "$base_prog")/format-fw" $format_synopsis $format_wrap "$@"
 }
 main() {
-    local target type format section
     target="$(helpfile_locate "$@")" || exit $?
     type="${target%% *}"
     target="${target#* }"
@@ -145,7 +144,6 @@ main() {
 }
 
 show_internal_section() { # SECTION FILE
-    local line
     sed -r 's/ +$//' "$2" | \
     while :; do
         read -r line || return 2
@@ -164,7 +162,6 @@ show_internal_section() { # SECTION FILE
 }
 internal_section_extract_text() { # <lines
     # Read lines from stdin until end of section; write to stdout.
-    local line
     while :; do
         IFS=' ' read -r line || return 0
         case "$line" in
