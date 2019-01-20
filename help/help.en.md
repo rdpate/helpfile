@@ -98,34 +98,46 @@ Example target paths with possible help text paths:
 Internal Sections
 ----
 
-Internal sections are for convenient self-contained scripts (or any file) which uses "#"-lines as comments.  Internal sections cannot specify subtopics or languages and must be within consecutive lines at the start of the file all starting with "#".  A section header starts with "#." followed by the section name.  A section line starts with "##" (excluded as a comment), starts with "# " (included with "# " removed), or is exactly "#" (a blank line after removing "#").  Any other line starting with "#" is not in that section.  Any other line not starting with "#" (including a blank line) ends all sections.
+Internal sections are for convenient self-contained files using #-comments; for example, shell scripts or most scripting languages.  All internal sections form a block at the start of a file of consecutive lines, which may start with optional spaces, have trailing spaces removed, and otherwise start with:
 
-    #!/anything/here
-    # not in any section
+* "#." section header
+* "# " (hash and one space are removed to get line contents)
+* "#" and end-of-line (a blank line)
+* "##" (ignored comment)
+* "#" and anything else (ignored)
+
+Example:
+
+    #! hashbangs ignored
+    # line not in any section
     #.version
-    # 0.0.0
+    # 0.1.0
+    #.legal
+    # Public Domain
     #
-    # Version details.
+    # This material is dedicated to the public domain.
     #.help
     # synopsis
     #
     # Help text.
-    #   indented
-    ## section comment
+    #     indented 4 spaces, because "# " is removed
+    ## ignored comment
     #
     # More help text.
-    not in any section
+    not in any section and no more sections in file
+
+Any line not starting with "#" (including a blank line) ends all sections.  Internal sections cannot specify subtopics or languages.
 
 
 Fallback Names
 ----
 
-For directories only and as a concession to the immense popularity of Github establishing practice based on their convention, some fallback names are supported for directories only.  Encouragement is given to only use these names if using Github or another tool which requires them.
+For directories only and as a concession to the immense popularity of GitHub establishing practice based on their convention, some fallback names are supported for directories only.  Encouragement is given to only use these names if using GitHub or another tool which requires them.
 
 * help section may be named README.md or README.txt
 * legal section may be named license.md or license.txt
 
-For Github in particular, note that README.md may be a symlink to help/help.en.md, but license.md will not be specially recognized if it is a symlink.
+For GitHub in particular, note that README.md may be a symlink (eg. to help/help.en.md), but license.md will not be specially recognized if it is a symlink.
 
 
 Subtopics

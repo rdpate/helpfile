@@ -1,10 +1,7 @@
 #!/bin/sh -ue
 
 base_prog="$(readlink -f "$0")"
-fatal() {
-    printf %s\\n "$base_prog error: $2" >&2
-    exit "$1"
-}
+fatal() { rc="$1"; shift; printf %s\\n "${0##*/} error: $*" >&2 || true; exit "$rc"; }
 
 section=help
 locate_search=
@@ -160,12 +157,12 @@ show_internal_section() { # SECTION FILE
     while :; do
         read -r line || return 2
         case "$line" in
-            "#.$1")
+            "#.$1"|"#.$1 "*)
+                # second pattern allows for future changes
                 internal_section_extract_text | helpfile_format_txt
                 return 0
                 ;;
-            '#'*)
-                ;;
+            '#'*) ;;
             *)
                 return 2
                 ;;
@@ -176,19 +173,13 @@ internal_section_extract_text() { # <lines
     # Read lines from stdin until end of section; write to stdout.
     local line
     while :; do
-        read -r line || return 0
+        IFS=' ' read -r line || return 0
         case "$line" in
-            '##'*)
-                ;;
-            '# '*)
-                printf %s\\n "${line#??}"
-                ;;
-            '#')
-                printf \\n
-                ;;
-            *)
-                break
-                ;;
+            '#.'*) break ;;
+            '# '*) printf %s\\n "${line#??}" ;;
+            '#') printf \\n ;;
+            '#'*) ;;
+            *) break ;;
         esac
     done
 }
