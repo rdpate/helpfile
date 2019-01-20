@@ -98,10 +98,7 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-
-if [ $# -eq 0 ]; then
-    fatal 64 'expected arguments: NAME [SUBTOPIC..]'
-fi
+[ $# != 0 ] || set -- .
 
 helpfile_locate() { # NAME [SUBTOPIC..]
     "$(dirname "$base_prog")/locate" \

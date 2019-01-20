@@ -1,6 +1,6 @@
-% NAME [SUBTOPIC..]
+% [PATH [SUBTOPIC..]]
 
-Show NAME's help overview or SUBTOPIC help.  Output is suitable for fixed-width display.
+Show PATH's help overview or SUBTOPIC help.  Output is suitable for fixed-width display.  PATH defaults to the current working directory.
 
 Options:
 -s  --synopsis          show synopsis only
