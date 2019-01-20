@@ -6,6 +6,7 @@ fatal() {
     exit "$1"
 }
 
+#format=txt
 pager="${PAGER:-less}"
 synopsis_only=false
 wrap=true
@@ -18,6 +19,16 @@ else
 fi
 handle_option() {
     case "$1" in
+        format)
+            [ -n "${2:-}" ] || fatal 64 "missing value for option $1"
+            case "$2" in
+                txt|md)
+                    # TODO: better Markdown support, even if rudimentary
+                    #format="$2"
+                    ;;
+                *) fatal 64 "unknown value for option $1" ;;
+            esac
+            ;;
         no-pager)
             [ $# = 1 ] || fatal 64 "unexpected value for option $1"
             pager=cat

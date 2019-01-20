@@ -108,8 +108,8 @@ helpfile_locate() { # NAME [SUBTOPIC..]
         $locate_flags \
         -- "$@"
 }
-helpfile_format_txt() { # [FILE]
-    "$(dirname "$base_prog")/format-fw-txt" $format_synopsis $format_wrap -- "$@"
+helpfile_format() { # [FILE]
+    "$(dirname "$base_prog")/format-fw" $format_synopsis $format_wrap "$@"
 }
 main() {
     local target type format section
@@ -119,12 +119,8 @@ main() {
     if [ file = "$type" ]; then
         format="${target##*.}"
         case "$format" in
-            txt)
-                helpfile_format_txt "$target"
-                ;;
-            md)
-                # TODO: better Markdown support, even if rudimentary
-                helpfile_format_txt "$target"
+            txt|md)
+                helpfile_format --format="$format" -- "$target"
                 ;;
             *)
                 fatal 69 "unknown file format ($format): $target"
@@ -156,7 +152,7 @@ show_internal_section() { # SECTION FILE
         case "$line" in
             "#.$1"|"#.$1 "*)
                 # second pattern allows for future changes
-                internal_section_extract_text | helpfile_format_txt
+                internal_section_extract_text | helpfile_format --format=txt
                 return 0
                 ;;
             '#'*) ;;

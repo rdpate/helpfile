@@ -1,5 +1,0 @@
-help files
-
-* See 'help -c help' to get help on the "help" command as found in $PATH.
-* See 'help cmd/help' to get help on the file "cmd/help" (which is a script).
-* See about/about.md to read about this package.
