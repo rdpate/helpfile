@@ -1,10 +1,6 @@
 #!/bin/sh -ue
 
-base_prog="$(readlink -f "$0")"
-fatal() {
-    printf %s\\n "$base_prog error: $2" >&2
-    exit "$1"
-}
+fatal() { rc="$1"; shift; printf %s\\n "${0##*/} error: $*" >&2 || true; exit "$rc"; }
 
 #format=txt
 pager="${PAGER:-less}"
@@ -115,9 +111,8 @@ output_text() {
 }
 
 if [ $# -gt 1 ]; then
-    fatal 64 'expected arguments: [FILE]'
-fi
-if [ $# = 1 -a x"${1:-}" != x- ]; then
+    fatal 64 'unexpected extra arguments'
+elif [ $# = 1 -a x"${1:-}" != x- ]; then
     exec <"$1"
 fi
 

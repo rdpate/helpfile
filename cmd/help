@@ -109,7 +109,7 @@ helpfile_locate() { # NAME [SUBTOPIC..]
         -- "$@"
 }
 helpfile_format() { # [FILE]
-    "$(dirname "$base_prog")/help-format-fw" $format_synopsis $format_wrap "$@"
+    "$(dirname "$base_prog")/fixed-width" $format_synopsis $format_wrap "$@"
 }
 main() {
     target="$(helpfile_locate "$@")" || exit $?

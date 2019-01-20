@@ -36,17 +36,17 @@ After the synopsis is the rest of the section:
 Commands
 ----
 
-### help NAME [SUBTOPIC..]
+    help NAME [SUBTOPIC..]
 
 Locate and display help files.  Symlink into $PATH as "help", cd doc/examples, and run "help .".
 
-### locate NAME [SUBTOPIC..]
+    help-locate NAME [SUBTOPIC..]
 
 Locate help files for an given name/subtopic.
 
-### format-fw-txt [FILE]
+    fixed-width [FILE]
 
-Format FILE as txt (see Text Format) with options for fixed-width output.
+Format FILE for fixed-width output.
 
 
 Locating Sections
