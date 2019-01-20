@@ -93,7 +93,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ $# -eq 0 ]; then
-    fatal 64 'expected arguments: NAME'
+    set -- .
 else
     check_args() {
         if [ -z "$1" ]; then
@@ -168,7 +168,7 @@ main() {
                 ;;
         esac
     fi
-    topic="$(printf /%s "$@" | sed -r 's,^/,,; s,//+,/,g; s,/+$,,')"
+    topic="$(printf /%s "$@" | sed -r 's,^/|/+$,,; s,//+,/,g')"
     case "$topic" in
         '') topic=/ ;;
         /*) ;;
@@ -180,7 +180,7 @@ main() {
             topic="${topic#/}"
             file="/${topic%%/*}"
             topic="${topic#*/}"
-            # resolve symlinks
+            # resolve symlinks, allowing for missing subtopics
             while [ -e "$file" ]; do
                 case "$topic" in
                     '')
@@ -204,7 +204,14 @@ main() {
                 case "$topic" in
                     ./*) topic="${topic#./}" ;;
                     .) topic= ;;
-                    ../*|..) fatal 64 'invalid ".." in TOPIC' ;;
+                    ..)
+                        file="${file%/*}"
+                        topic=
+                        ;;
+                    ../*)
+                        file="${file%/*}"
+                        topic="${topic#../}"
+                        ;;
                     */*)
                         file="$file/${topic%%/*}"
                         topic="${topic#*/}"

@@ -1,8 +1,0 @@
-#!/bin/sh -ue
-#.help
-# help NAME [SUBTOPIC..]
-#
-# Wrapper for "help --command".  Use "help ./X" to avoid $PATH lookup.
-
-# You may symlink this file directly, or else copy it and change the line below with the explicit path to help.
-exec "$(dirname "$(readlink -f "$0")")/../../cmd/help" --command "$@"

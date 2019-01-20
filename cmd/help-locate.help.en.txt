@@ -1,6 +1,6 @@
-% TOPIC..
+% [TOPIC..]
 
-Locate help for TOPIC.
+Locate help for TOPIC or working directory.
 
 Output on success is "file FILENAME", "internal SECTION FILENAME", or "man SECTION NAME".
 

@@ -1,1 +1,0 @@
-symbolic links can have help files independent of their target

@@ -3,6 +3,12 @@ Help
 
 Help contains an overview of purpose, options, version, and other closely related information.  For executables, Help replaces the "options" of --help and --version without executing files which may be missing, non-functional, or untrusted.  For non-executables (including directories), Help provides these details for a file located anywhere in the filesystem through a consistent interface -- the commands provided by this package.
 
+Quickstart:
+
+    $ PATH="$PWD/cmd:$PATH"
+    $ cd doc/examples
+    $ help
+
 
 Sections
 ----
@@ -13,7 +19,6 @@ Help is split into named sections:
 * *version* -- version string and details
 * *legal* -- license, copyright, and related
 * *x-* prefix -- reserved for experimental (and only experimental) use
-* (more sections to be determined?)
 
 Each section starts with a synopsis whose meaning depends on the section:
 
@@ -23,30 +28,14 @@ Each section starts with a synopsis whose meaning depends on the section:
 
 Every synopsis should be short, ideally one line and no longer than 40 characters, with the intention to be useful when displayed in a table-like layout using "name" and "synopsis" columns (so the name doesn't need to be repeated in the synopsis) as well as automatic extraction (eg. version string).
 
-When retrieving a synopsis, a line which only consists of one or more equal signs ("====") is deleted.  This is intended to allow Markdown heading syntax without explicitly supporting that format (yet?).
+When retrieving a synopsis, a line which only consists of one or more equal signs ("====") is deleted.  This allows Markdown heading syntax without explicitly supporting that format.
 
 After the synopsis is the rest of the section:
 
-* *help* -- varies greatly
-    * for executables: operation details, example command lines, and option descriptions
+* *help* -- varies greatly by type of file
+    * commands: operation details, example command lines, and option descriptions
 * *version* -- extraneous or verbose details; see doc/case-study/vim-version.md for an example
 * *legal* -- copyright statements and legal text
-
-
-Commands
-----
-
-    help NAME [SUBTOPIC..]
-
-Locate and display help files.  Symlink into $PATH as "help", cd doc/examples, and run "help .".
-
-    help-locate NAME [SUBTOPIC..]
-
-Locate help files for an given name/subtopic.
-
-    fixed-width [FILE]
-
-Format FILE for fixed-width output.
 
 
 Locating Sections
@@ -73,7 +62,7 @@ A "help" shadow directory tree contains one directory per topic and one file per
     # additionally, if "/path/to/topic" is a directory:
     /path/to/topic/help/help.en.txt
 
-Help directories are searched "outside-in", under the presumption that system- and user-supplied files are found first and override package- and locally-supplied files.  The first file found matching topic, section, and an acceptable language (see Section Languages) stops the search, even if continuing would find different languages or formats in another directory.  If a matching help file is not found and the target path contains a symlink, the earliest symlink is resolved and the search restarts.
+Help directories are searched "outside-in", under the presumption that system- and user-supplied files are found first and override package- and locally-supplied files.  The first file found matching topic, section, and an acceptable language (see Section Languages) stops the search, even if continuing would find different languages or formats in another directory.
 
 The first (outside-in) candidate with any language is saved and used if the search is exhausted without finding a matching language.  If a help file is still not found, internal sections are searched (see Internal Sections).
 
@@ -190,35 +179,3 @@ The text format is "plain" and denoted with "txt" file extension.  Any line star
     * ideally, only one line is listed; otherwise the first line SHOULD be the most common usage
 * for version sections, the version string MUST be the first line followed by a blank line if text follows
     * if version string is unknown or missing but non-synopsis text is included, the version string MUST NOT be blank and SHOULD be "unknown"
-
-
-Why use directories for topics and subtopics?
-----
-
-Instead of placing topic (and subtopics) into directory structure, they could be included in filenames, eg. ".../help/topic[.subtopic].lang.format".  However, this complicates and lengthens lookup with additional permutations on possible locations.  Employing directories unifies files as subtopics of their parent directories without necessitating existing files to use their corresponding help files.  Help for the "root" of a package is thus naturally placed at the topmost level, eg. "help -v .".
-
-
-Future Ideas
-----
-
-* alternative implementations should be possible, and every feature must keep that in mind
-    * allow for user config such as whether to use a pager or another file viewer (such as a browser), or to fallback to man (or something else)
-* how widely applicable is --synopsis for help sections?
-    * subtopics?
-    * non-commands?
-    * what alternative synopsis will always make sense?
-* separate command to list subtopics?
-* will not support dynamic subtopics, where code must be executed to determine the final command (eg. as with hg and git aliases in .hgrc and .git/config)
-* more formats than plain text
-    * desirable: links, anchors, italic, bold, underline
-    * maybe Markdown
-    * probably only one more format, considering alternative implementations must support it too
-        * something human-readable as text strongly preferred, allows treating it as plain text if format isn't parsed
-* machine-readable specification for options and arguments to aid command completion
-    * more general "properties" specification? (such as documentation URL) but quickly getting more complex than required
-* internal sections could specify subtopic, language, and format through the section header
-    * these must be the only metadata in the section header, and correspond to the filename of a separate section
-    * "#.help.LANG.FORMAT SUBTOPIC.."?
-    * "#.help /SUBTOPIC.LANG.FORMAT"?
-    * "#/SUBTOPIC.help.LANG.FORMAT"?
-    * inline sections are exactly equivalent to the contents of a separate section with specific line munging for comments (prefixing "#" for comments and blank lines or "# " otherwise)
